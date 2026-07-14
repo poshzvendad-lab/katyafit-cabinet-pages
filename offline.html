@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Безопасность: при переезде на GitHub Pages пропали HTTP-заголовки CF (свои там нельзя) -> максимум возвращаем мета-тегами + фрейм-бастером. Детали: docs/МИГРАЦИЯ-ХОСТИНГА.md §13.1 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://sxktnpupxcslzjrhisyw.supabase.co; connect-src 'self' https://sxktnpupxcslzjrhisyw.supabase.co wss://sxktnpupxcslzjrhisyw.supabase.co https://*.ingest.de.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <script src="js/frame-buster.js?v=0.6.73"></script>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1a1f1c">
+    <link rel="icon" href="favicon.svg?v=0.6.73" type="image/svg+xml">
+    <title>Нет связи · Личный кабинет KatyaFit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/tokens.css?v=0.6.73">
+    <link rel="stylesheet" href="css/cabinet.css?v=0.6.73">
+</head>
+<body>
+    <main class="auth-wrap">
+        <div class="auth-card">
+            <div class="brand">
+                <span class="brand__logo">Katya<b>Fit</b></span>
+            </div>
+            <div class="brand__sub">Личный кабинет</div>
+
+            <h1 class="auth-title">Нет связи</h1>
+            <p class="auth-sub">
+                Похоже, пропал интернет. Проверь подключение — и твоя программа
+                снова будет на месте. Прогресс никуда не денется.
+            </p>
+            <button type="button" class="btn btn--gold btn--block" onclick="window.location.reload()">
+                Повторить
+            </button>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Безопасность: при переезде на GitHub Pages пропали HTTP-заголовки CF (свои там нельзя) -> максимум возвращаем мета-тегами + фрейм-бастером. Детали: docs/МИГРАЦИЯ-ХОСТИНГА.md §13.1 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://sxktnpupxcslzjrhisyw.supabase.co; connect-src 'self' https://sxktnpupxcslzjrhisyw.supabase.co wss://sxktnpupxcslzjrhisyw.supabase.co https://*.ingest.de.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <script src="js/frame-buster.js?v=0.6.73"></script>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1a1f1c">
+    <link rel="icon" href="favicon.svg?v=0.6.73" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=0.6.73">
+    <link rel="manifest" href="manifest.webmanifest?v=0.6.73">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KatyaFit">
+    <title>День программы · Личный кабинет KatyaFit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/tokens.css?v=0.6.73">
+    <link rel="stylesheet" href="css/cabinet.css?v=0.6.73">
+</head>
+<body>
+    <header class="topbar">
+        <div class="container topbar__inner">
+            <a class="brand" href="dashboard.html">
+                <span class="brand__logo">Katya<b>Fit</b></span>
+                <span class="brand__sub">Кабинет</span>
+            </a>
+            <div class="topbar__user">
+                <span class="avatar" data-user-avatar>К</span>
+                <span class="is-skel" data-user-name></span>
+                <a href="#" class="topbar__logout" data-logout>Выйти</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="day-page" data-day-page>
+        <div class="container" data-day-root></div>
+    </main>
+
+    <!-- Залипающая кнопка (для текущего дня) -->
+    <div class="day-cta" data-cta hidden>
+        <div class="container"><button class="btn btn--gold" data-open-finish>Завершить день →</button></div>
+    </div>
+
+    <!-- Шторка «Завершить день» -->
+    <div class="sheet-overlay" data-finish-sheet>
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="finish-title">
+            <div class="sheet__grab"></div>
+            <button class="sheet__close" data-sheet-close aria-label="Закрыть">✕</button>
+
+            <!-- Шаг 1: настроение -->
+            <div class="sheet-step" data-step="mood">
+                <h2 id="finish-title">Как прошёл день?</h2>
+                <p class="sheet-sub">Отметь честно — это поможет Кате видеть твой настрой.</p>
+                <div class="habit-summary" data-habit-summary></div>
+                <div class="habit-summary habit-summary--nutri" data-nutri-summary hidden></div>
+                <div class="mood-opts">
+                    <button class="mood-opt" data-mood="great"><span class="emo">💪</span> Всё получилось</button>
+                    <button class="mood-opt" data-mood="partial"><span class="emo">🙂</span> Получилось частично</button>
+                    <button class="mood-opt" data-mood="hard"><span class="emo">😮‍💨</span> Было тяжело</button>
+                </div>
+                <p class="sheet-err" data-finish-err hidden></p>
+            </div>
+
+            <!-- Шаг 2: поздравление -->
+            <div class="sheet-step sheet-done" data-step="done" hidden>
+                <div class="emo">🎉</div>
+                <h2 data-done-title>День завершён!</h2>
+                <p data-done-text>Завтра тебя ждёт новый день.</p>
+                <a class="btn btn--gold btn--block" href="dashboard.html">Вернуться к программе</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Шторка «Рецепт» — пошаговое приготовление блюда дня (кнопка в раскрытом блюде) -->
+    <div class="sheet-overlay" data-recipe-sheet>
+        <div class="sheet sheet--recipe" role="dialog" aria-modal="true" aria-labelledby="recipe-title">
+            <div class="sheet__grab"></div>
+            <button class="sheet__close" data-recipe-close aria-label="Закрыть">✕</button>
+            <div class="rec-slot" data-recipe-slot></div>
+            <h2 id="recipe-title" data-recipe-title></h2>
+            <div class="rec-body" data-recipe-body></div>
+        </div>
+    </div>
+
+    <!-- Шторка «Собери замену» — пошаговый визард замены блюда: белок → гарнир →
+         жир (жир можно пропустить); у перекуса (слот 20%) один шаг — вкусняшки -->
+    <div class="sheet-overlay" data-wiz-sheet>
+        <div class="sheet sheet--wiz" role="dialog" aria-modal="true" aria-labelledby="wiz-title">
+            <div class="sheet__grab"></div>
+            <button class="sheet__close" data-wiz-close aria-label="Закрыть">✕</button>
+            <div class="rec-slot" data-wiz-slot></div>
+            <h2 id="wiz-title">Собери замену</h2>
+            <div class="wiz-prog" data-wiz-prog></div>
+            <div class="wiz-sum" data-wiz-sum></div>
+            <div data-wiz-body></div>
+        </div>
+    </div>
+
+    <script src="js/vendor/supabase.js?v=0.6.73"></script>
+    <script src="js/vendor/sentry.js?v=0.6.73"></script>
+    <script src="js/sentry-init.js?v=0.6.73"></script>
+    <script src="js/supabase.js?v=0.6.73"></script>
+    <script src="js/error-report.js?v=0.6.73"></script>
+    <script src="js/program-data.js?v=0.6.73"></script>
+    <script src="js/nutrition-data.js?v=0.6.73"></script>
+    <script src="js/app.js?v=0.6.73"></script>
+    <script>
+        (async () => {
+            if (!(await requireAuth())) return;
+            initTopbar();
+
+            const root = document.querySelector('[data-day-root]');
+            const cta = document.querySelector('[data-cta]');
+            const sheet = document.querySelector('[data-finish-sheet]');
+            // Экранируем и кавычки — на случай использования в атрибутах разметки.
+            function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+            // Состояние блока питания: план дня + галочки «съедено» по приёмам,
+            // добор и замены из Конструктора. Это калькулятор дня, не дневник — но
+            // счёт ТЕКУЩЕГО дня переживает перезагрузку (localStorage kf_nutri_v1):
+            // на телефоне вкладка выгружается постоянно, терять отметки нельзя.
+            // Другой календарный день или другой день программы = чистый счёт.
+            let nutri = null;
+            let planMeals = null; // приёмы текущего дня — для шторки «Рецепт»
+            const NUTRI_LS = 'kf_nutri_v1';
+            function nutriToday() {
+                const d = new Date();
+                return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            }
+            // Сохраняем только счёт активного дня: на страницах прошлых дней добор —
+            // игрушка, она не должна затирать живой счёт сегодняшнего.
+            function nutriPersistable() { return N === KF.activeDay(); }
+            function nutriSave() {
+                if (!nutri || !nutriPersistable()) return;
+                try {
+                    const repl = {};
+                    Object.keys(nutri.repl).forEach(i => {
+                        const items = nutri.repl[i].items;
+                        // q — label чипа быстрой замены (для подсветки после перезагрузки)
+                        if (items && items.length) repl[i] = { items: items, q: nutri.repl[i].q || null };
+                    });
+                    const eaten = Object.keys(nutri.eaten);
+                    if (!nutri.added.length && !Object.keys(repl).length && !eaten.length) {
+                        localStorage.removeItem(NUTRI_LS);
+                        return;
+                    }
+                    localStorage.setItem(NUTRI_LS, JSON.stringify({ day: N, date: nutriToday(), added: nutri.added, repl: repl, eaten: eaten }));
+                } catch (e) { /* приватный режим/квота — счёт живёт до перезагрузки */ }
+            }
+            function nutriRestore() {
+                if (!nutriPersistable()) return;
+                try {
+                    const s = JSON.parse(localStorage.getItem(NUTRI_LS) || 'null');
+                    if (!s || s.day !== N || s.date !== nutriToday()) return;
+                    const okItem = a => a && typeof a.name === 'string' &&
+                        [a.kcal, a.p, a.f, a.c].every(v => typeof v === 'number' && isFinite(v));
+                    (Array.isArray(s.added) ? s.added : []).forEach(a => { if (okItem(a)) nutri.added.push(a); });
+                    Object.keys(s.repl || {}).forEach(i => {
+                        if (!nutri.meals[i]) return;
+                        const items = ((s.repl[i] || {}).items || []).filter(okItem);
+                        if (items.length) nutri.repl[i] = { items: items,
+                            q: typeof (s.repl[i] || {}).q === 'string' ? s.repl[i].q : null };
+                    });
+                    (Array.isArray(s.eaten) ? s.eaten : []).forEach(i => { if (nutri.meals[i]) nutri.eaten[i] = true; });
+                } catch (e) { /* битое хранилище — просто чистый счёт */ }
+            }
+
+            function getDayNum() {
+                // parseInt: дробное/мусорное ?day= не должно рисовать «День 2.5».
+                const n = parseInt(new URLSearchParams(location.search).get('day'), 10);
+                return (n >= 1 && n <= 28) ? n : KF.activeDay();
+            }
+            const N = getDayNum();
+            const state = dayState(N);
+            // Пройденный день — справочник, не рабочий стол: галочки задач и весь
+            // интерактив счёта питания (съедено/замены/добор) живут только на
+            // ТЕКУЩЕМ дне (жалоба владельца 11.07.2026 — прожитое менять нельзя).
+            const liveDay = (state === 'today');
+
+            // Контент дня берём с сервера (program_days, RLS). Закрытый день
+            // сервер не отдаёт (d === null) — это и есть настоящий замок.
+            // Таймаут + catch: зависший/упавший запрос (флаки-сеть до Supabase)
+            // раньше оставлял страницу пустой или рисовал ложный «замок» на
+            // открытом дне — теперь это отдельный экран «проверь интернет».
+            let d = null;
+            if (state !== 'locked') {
+                const loadDay = Promise.race([
+                    KF.getDay(N).catch(() => null),
+                    new Promise(res => setTimeout(() => res(null), 8000)),
+                ]);
+                // Меню питания дня N (+ N+1 для «Что готовить завтра») и таблицы
+                // замен переехали под серверный замок (nutrition_days /
+                // nutrition_reference, RLS по тарифу, ?v=0.6.73). Грузим ПАРАЛЛЕЛЬНО
+                // с контентом дня — свой таймаут/фолбэк внутри loadNutrition, поэтому
+                // рендер не ждёт лишнего. Вне тарифа день закрыт — питание не тянем.
+                const loadNutri = KF.dayBeyondTier(N)
+                    ? Promise.resolve()
+                    : KF.loadNutrition({ days: [N, N + 1], reference: true });
+                const res = await Promise.all([loadDay, loadNutri]);
+                d = res[0];
+            }
+
+            // SVG-замок (общий для обоих экранов закрытого дня)
+            const LOCK_SVG = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="10.5" width="13" height="9" rx="2"/><path d="M8.2 10.5V8a3.8 3.8 0 0 1 7.6 0v2.5"/></svg>';
+
+            // ─── Закрытый день (замки решает клиентское состояние + тариф),
+            // отдельно — сетевой сбой на ОТКРЫТОМ дне (день должен быть, а не пришёл)
+            if (state !== 'locked' && !KF.dayBeyondTier(N) && !d) {
+                root.innerHTML =
+                    '<a class="back-link" href="dashboard.html">← К календарю</a>' +
+                    '<div class="day-block day-locked">' +
+                    '<div class="day-locked__icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 9.5a11 11 0 0 1 15 0"/><path d="M7.5 12.7a7 7 0 0 1 9 0"/><path d="M10.4 15.8a3 3 0 0 1 3.2 0"/><circle cx="12" cy="18.6" r="0.4"/></svg></div>' +
+                    '<h2>Не получилось загрузить день</h2>' +
+                    '<p>Похоже, интернет барахлит — день не пришёл с сервера. Проверь связь и попробуй ещё раз.</p>' +
+                    '<button type="button" class="btn btn--gold" data-retry>Обновить страницу</button></div>';
+                root.querySelector('[data-retry]').addEventListener('click', () => location.reload());
+            } else if (state === 'locked' || !d) {
+                if (KF.dayBeyondTier(N)) {
+                    // День вне тарифа (пробный: дни 4+) → стена с предложением открыть полный доступ.
+                    root.innerHTML =
+                        '<a class="back-link" href="dashboard.html">← К календарю</a>' +
+                        '<div class="day-block day-locked day-locked--upsell">' +
+                        '<div class="day-locked__icon">' + LOCK_SVG + '</div>' +
+                        '<h2>Это уже в полной программе</h2>' +
+                        '<p>В пробном доступе открыты первые дни. Дальше — полная программа на 28 дней: все тренировки и питание. Открой полный доступ, чтобы продолжить.</p>' +
+                        '<a class="btn btn--gold" href="' + KF_UPGRADE_URL + '" target="_blank" rel="noopener">Открыть полный доступ</a>' +
+                        '<a class="back-link back-link--center" href="dashboard.html">Вернуться к программе</a></div>';
+                } else {
+                    root.innerHTML =
+                        '<a class="back-link" href="dashboard.html">← К календарю</a>' +
+                        '<div class="day-block day-locked">' +
+                        '<div class="day-locked__icon">' + LOCK_SVG + '</div>' +
+                        '<h2>День ' + N + ' ещё закрыт</h2>' +
+                        '<p>Сначала заверши текущий день — и этот откроется. Сейчас доступен день ' + KF.activeDay() + '.</p>' +
+                        '<a class="btn btn--gold" href="day.html?day=' + KF.activeDay() + '">Перейти к текущему дню</a></div>';
+                }
+            } else {
+                renderDay();
+            }
+
+            function renderDay() {
+                const meta = TYPE_META[d.type];
+                const isDone = (state === 'done');
+                let html = '';
+
+                // Линейные SVG-иконки заголовков блоков (в тон календарю).
+                const _bi = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+                const IC_WORKOUT = '<svg ' + _bi + '><path d="M6.5 8v8M3.5 9.5v5M17.5 8v8M20.5 9.5v5M6.5 12h11"/></svg>';
+                const IC_MEAL = '<svg ' + _bi + '><path d="M5 3v6.5a2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5V3"/><path d="M7.5 12v9"/><path d="M16.5 21V3"/><path d="M16.5 3c2 1 2 6 0 7.5"/></svg>';
+                const IC_TASK = '<svg ' + _bi + '><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3.2a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V4"/><path d="M8.5 12.5l2.2 2.2 4.3-4.3"/></svg>';
+
+                html += '<a class="back-link" href="dashboard.html">← К календарю</a>';
+                html += '<header class="day-header">' +
+                    '<div class="day-header__eyebrow">Неделя ' + d.week + ' · ' + meta.tag + '</div>' +
+                    '<h1>День ' + N + '. ' + escapeHtml(d.title) + '</h1>' +
+                    '<p>' + escapeHtml(d.focus) + '</p>' +
+                    (isDone ? '<span class="done-pill">✓ День пройден</span>' : '') +
+                    '</header>';
+
+                if (d.workout) {
+                    let bodyHtml;
+                    if (!KF.showsWorkouts()) {
+                        // Тариф «только питание»: тренировка под замком + предложение открыть полный.
+                        bodyHtml = '<div class="video-frame video-frame--soon workout-locked">' +
+                            '<div class="video-soon">' +
+                                '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="10.5" width="13" height="9" rx="2"/><path d="M8.2 10.5V8a3.8 3.8 0 0 1 7.6 0v2.5"/></svg>' +
+                                '<p>Тренировки — в полном доступе</p>' +
+                                '<a class="btn btn--gold" href="' + KF_UPGRADE_URL + '" target="_blank" rel="noopener">Добавить тренировки</a>' +
+                            '</div></div>';
+                    } else {
+                        // Реальное видео или заглушка? Плейсхолдеры Фазы 1 (в т.ч. демо- id)
+                        // НЕ встраиваем — иначе участница увидит чужой ролик. Покажем «скоро».
+                        const yt = (d.workout.yt || '').trim();
+                        const PLACEHOLDERS = ['', 'placeholder', 'dQw4w9WgXcQ'];
+                        const realVideo = !PLACEHOLDERS.includes(yt) && /^[\w-]{11}$/.test(yt);
+                        bodyHtml = realVideo
+                            ? '<div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(yt) + '" title="Тренировка" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>'
+                            : '<div class="video-frame video-frame--soon"><div class="video-soon"><span class="emo">🎬</span><p>Видео-тренировка скоро появится здесь</p></div></div>';
+                    }
+                    html += '<section class="day-block">' +
+                        '<div class="day-block__head"><span class="ic">' + IC_WORKOUT + '</span>' +
+                            '<div><h2>Тренировка дня</h2><div class="sub">' + escapeHtml(d.workout.title) + ' · ' + escapeHtml(d.workout.dur) + '</div></div></div>' +
+                        bodyHtml +
+                        '</section>';
+                }
+
+                html += renderNutrition(IC_MEAL);
+
+                const saved = KF.getHabits(N);
+                let habitsHtml = '';
+                d.habits.forEach((h, idx) => {
+                    // Стрик «N дн. подряд» — маленькая награда за постоянство (от 2 дней).
+                    const s = KF.habitStreak(N, idx);
+                    // Пройденный день зафиксирован: галочки только на просмотр
+                    // (жалоба владельца 11.07.2026 — задачи дней 1–6 можно было менять).
+                    habitsHtml += '<label class="habit"><input type="checkbox" data-habit="' + idx + '" ' + (saved[idx] ? 'checked' : '') + (isDone ? ' disabled' : '') + '>' +
+                        '<span class="box"></span><span class="label">' + escapeHtml(h) +
+                        '<span class="habit-streak" data-habit-streak="' + idx + '"' + (s >= 2 ? '' : ' hidden') + '>🔥 ' + s + ' дн. подряд</span>' +
+                        '</span></label>';
+                });
+                html += '<section class="day-block">' +
+                    '<div class="day-block__head"><span class="ic">' + IC_TASK + '</span>' +
+                        '<div><h2>Задачи на день</h2><div class="sub">' + (isDone ? 'День пройден — задачи зафиксированы' : 'Отмечай по ходу дня') + '</div></div></div>' +
+                    '<div class="habits' + (isDone ? ' habits--done' : '') + '">' + habitsHtml + '</div></section>';
+
+                root.innerHTML = html;
+
+                // Кнопка «Обновить» в фолбэке питания (меню не пришло с сервера).
+                const nutriRetry = root.querySelector('[data-nutri-retry]');
+                if (nutriRetry) nutriRetry.addEventListener('click', () => location.reload());
+
+                if (!isDone) root.querySelectorAll('[data-habit]').forEach(cb => {
+                    cb.addEventListener('change', async () => {
+                        const r = await KF.setHabit(N, +cb.dataset.habit, cb.checked);
+                        // Сбой сети — вернуть чекбокс как было (иначе после F5 галочка «пропадёт»).
+                        if (!r || !r.ok) { cb.checked = !cb.checked; return; }
+                        // Обновить стрик вживую: отметила — увидела «🔥 N дн. подряд».
+                        const st = root.querySelector('[data-habit-streak="' + cb.dataset.habit + '"]');
+                        if (st) {
+                            const s = KF.habitStreak(N, +cb.dataset.habit);
+                            st.textContent = '🔥 ' + s + ' дн. подряд';
+                            st.hidden = s < 2;
+                        }
+                    });
+                });
+
+                // «Собери по Конструктору ↓» / «заменить порцию» — раскрыть таблицы и
+                // доскроллить. Группы НЕ раскрываем: аккордеон «одна шторка» (app.js)
+                // всё равно оставил бы одну — участница откроет нужную сама.
+                root.querySelectorAll('[data-con-jump]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const con = root.querySelector('details[data-con-tables]');
+                        if (!con) return;
+                        con.open = true;
+                        con.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                });
+
+                // Живой счётчик «съедено + добор»: тап по строке Конструктора → в счёт.
+                wireNutri();
+
+                // Кнопка «Завершить» — только для текущего незавершённого дня
+                if (state === 'today') {
+                    cta.hidden = false;
+                    document.querySelector('[data-day-page]').classList.add('has-cta');
+                    // Гейт анкеты: День 1 нельзя завершить, пока не заполнена обязательная
+                    // стартовая анкета (возраст/рост/вес; фото по желанию). Она на главной — ведём туда.
+                    if (N === 1 && !KF.anketaComplete()) {
+                        const btn = cta.querySelector('[data-open-finish]');
+                        btn.textContent = 'Заполнить анкету, чтобы начать →';
+                        btn.addEventListener('click', () => { location.href = 'dashboard.html#anketa'; });
+                    } else {
+                        initFinishFlow();
+                    }
+                }
+            }
+
+            // ─── Блок «План питания» (методичка Кати 80/20, см. nutrition-data.js) ───
+            function renderNutrition(icon) {
+                const plan = (typeof nutritionDay === 'function') ? nutritionDay(N) : null;
+
+                // Меню приходит с сервера (nutrition_days, RLS по тарифу, ?v=0.6.73).
+                // На ОТКРЫТОМ дне plan === null означает сбой/таймаут загрузки (сеть
+                // из РФ иногда висит — своя защита в KF.loadNutrition): мягко
+                // предлагаем обновиться, но НЕ роняем блок. Как запасной контент —
+                // простое меню из program_days (d.meals), чтобы экран не был пустым.
+                if (!plan) {
+                    let total = 0, rows = '';
+                    (d.meals || []).forEach(m => {
+                        total += (m.kcal || 0);
+                        rows += '<div class="meal"><div class="meal__when">' + escapeHtml(m.when || '') + '</div>' +
+                            '<div class="meal__body"><h4>' + escapeHtml(m.name || '') + '</h4><p>' + escapeHtml(m.desc || '') + '</p></div>' +
+                            (m.kcal ? '<div class="meal__kcal">' + m.kcal + ' ккал</div>' : '') + '</div>';
+                    });
+                    return '<section class="day-block"><div class="day-block__head"><span class="ic">' + icon + '</span>' +
+                        '<div><h2>План питания</h2><div class="sub">Не удалось загрузить твой план — проверь интернет</div></div></div>' +
+                        '<div class="nutri-reload"><p>Похоже, связь барахлит и меню не пришло с сервера.</p>' +
+                        '<button type="button" class="btn btn--gold" data-nutri-retry>Обновить страницу</button></div>' +
+                        (rows ? '<div class="meals">' + rows + '</div>' +
+                            (total ? '<div class="meals__total">Пока показываем пример: <b>' + total + ' ккал</b></div>' : '') : '') +
+                        '</section>';
+                }
+
+                planMeals = plan.meals; // шторка «Рецепт» берёт блюдо по индексу отсюда
+
+                // Дневной бюджет калорий по Миффлину (под возраст/рост/вес). Идея Кати:
+                // участница видит, сколько калорий ест по плану и сколько ещё можно добрать.
+                const t = KF.nutritionTargets();
+                let normHtml;
+                if (t) {
+                    normHtml = '<div class="nutri-norm">' +
+                        '<div class="nutri-norm__kcal"><b>' + t.kcal + '</b> ккал' +
+                            '<span>твой бюджет на день · активность: ' + t.activity.label.toLowerCase() +
+                            ' <a href="dashboard.html#anketa" class="nutri-norm__edit">изменить</a></span></div>' +
+                        '<div class="nutri-norm__macros">' +
+                            '<span><i>Б</i>' + t.protein + ' г</span>' +
+                            '<span><i>Ж</i>' + t.fat + ' г</span>' +
+                            '<span><i>У</i>' + t.carb + ' г</span>' +
+                        '</div></div>';
+                } else {
+                    normHtml = '<a class="nutri-norm nutri-norm--empty" href="dashboard.html#anketa">' +
+                        'Заполни анкету — рассчитаем твой дневной бюджет калорий под возраст и вес →</a>';
+                }
+
+                // Быстрые замены: 2–3 готовых варианта на блюдо — теперь живут на
+                // первом экране шторки «Заменить» (минимализм 11.07.2026: на карточке
+                // одна кнопка, варианты не мозолят глаза). На пройденном дне не нужны.
+                const quickMap = liveDay ? buildQuickReplaces(plan) : {};
+
+                // Блюда дня — раскрывающиеся карточки (свёрнуто: галочка «съедено» +
+                // слот + короткое название + ккал; раскрыто: состав + замена).
+                let rows = '';
+                plan.meals.forEach((m, i) => { rows += mealCard(m, i, !!t, quickMap[i]); });
+
+                // База дня (план) + добор и ЗАМЕНЫ из Конструктора живут в nutri; плашки
+                // итога/бюджета/добора рисуются билдерами и перерисовываются paintNutri без
+                // полного ре-рендера (чтобы не схлопывать раскрытые блюда/Конструктор).
+                // repl[i] = { items:[...] } — блюдо i вычтено из счёта, вместо него items
+                // (кладут чипы быстрых замен и шторка-визард «Собери замену»).
+                const tot = nutritionDayTotals(plan);
+                const mealMap = {};
+                plan.meals.forEach((m, i) => {
+                    if (m.p != null) mealMap[i] = { slot: m.slot, kcal: mealKcal(m), p: m.p, f: m.f, c: m.c };
+                });
+                nutri = {
+                    t: t || null,
+                    cheat: !!plan.cheat,
+                    added: [],
+                    meals: mealMap,
+                    repl: {},
+                    eaten: {},        // { i: true } — приём отмечен галочкой «съедено»
+                    quick: quickMap,  // { i: [{label, kcal, items}] } — быстрые замены
+                };
+                nutriRestore(); // счёт текущего дня переживает перезагрузку
+
+                const totalHtml = '<div class="nutri-total' + (tot.hasFree ? ' nutri-total--partial' : '') + '" data-nutri-total>' + totalInner() + '</div>';
+                // Справка бюджета — пилюлей ПОД плашкой, слева, в один столбик с
+                // «Как пользоваться планом?» (жалоба владельца 11.07.2026: пилюля
+                // в углу плашки стояла справа, соседняя — слева, выглядело криво).
+                // Живёт ВНЕ [data-nutri-budget]: paintNutri перерисовывает только
+                // шкалы, раскрытая справка не захлопывается от каждой галочки.
+                const budHelp = qaHtml('Как работает бюджет дня?',
+                    '<p><b>Бюджет — это твоя личная норма еды на день:</b> сколько калорий, белка, жиров и углеводов нужно именно тебе. Мы посчитали её по твоей анкете — возраст, рост, вес и активность — по формуле, которой пользуются диетологи. Небольшой запас на похудение уже заложен. Если вес изменился — обнови анкету, и норма пересчитается.</p>' +
+                    '<p><b>Почему шкалы четыре, а не одна.</b> Белок даёт сытость и бережёт мышцы. Жиры обязательны для женского здоровья: из них организм делает гормоны, от них зависят кожа и волосы — поэтому совсем без жиров худеть нельзя. Углеводы — это силы и энергия на день.</p>' +
+                    '<p><b>Твоя цель — к вечеру заполнить каждую шкалу примерно на 100%.</b> Это не «есть поменьше», а наоборот — съесть свою норму целиком. Так вес уходит спокойно, без голода и срывов. Галочка ✓ рядом со шкалой означает: норма набрана.</p>' +
+                    '<p><b>Если день не сходится идеально — ничего страшного.</b> Важнее всего уложиться в калории. Затем — набрать белок. Жиры и углеводы достаточно набрать примерно, плюс-минус 15%. Доедать через силу, лишь бы заполнить шкалу, не нужно.</p>' +
+                    '<p><b>Откуда в шкалах цифры.</b> Шкалы растут, когда ты отмечаешь съеденное: галочки у приёмов пищи, добавки из «Замен и вкусняшек», «Свой продукт». Сам план даёт около 1200 ккал — разницу до своей нормы добирай сама, лучше всего белковыми продуктами.</p>' +
+                    '<p><b>Съела больше нормы?</b> Изредка и немного — не страшно: просто со следующего приёма пищи вернись к плану. Устраивать «голодный день в наказание» не нужно.</p>' +
+                    '<p><b>В день читмила</b> свободный ужин в шкалы не записываем: остаток бюджета после обычных приёмов — это и есть место для него.</p>');
+                const budgetHtml = t
+                    ? '<div class="nutri-budget"><div data-nutri-budget>' + budgetInner() + '</div></div>' + budHelp
+                    : '<a class="nutri-budget nutri-budget--empty" href="dashboard.html#anketa">Заполни анкету — увидишь свой бюджет и сколько ещё можно съесть за день →</a>';
+                const addedHtml = '<div class="nutri-added" data-nutri-added hidden></div>';
+
+                // Вся обучающая «вода» — за раскрывашками (просьба владельца 10.07.2026):
+                // по умолчанию экран чистый, по тапу — подробный ликбез для новичка.
+                const helpHtml = qaHtml('Как пользоваться планом?',
+                    '<p><b>Отмечай, что съела.</b> Слева от каждого приёма пищи есть кружок. Съела — нажми на кружок, появится галочка, и калории сами добавятся в счёт дня.</p>' +
+                    '<p><b>Открывай блюдо, чтобы узнать подробности.</b> Нажми на строку с блюдом — она раскроется: увидишь состав, белки, жиры и углеводы, кнопку «Рецепт» с пошаговым приготовлением и кнопку «Заменить».</p>' +
+                    '<p><b>Как понимать вес продуктов.</b> Крупная цифра в составе — вес сырого продукта или сухой крупы: столько нужно взвесить ДО готовки. Мелким серым рядом написано, сколько примерно получится в готовом виде на тарелке.</p>' +
+                    '<p><b>Не нравится блюдо — замени.</b> Раскрой блюдо и нажми «Заменить»: можно выбрать готовый вариант одним нажатием или собрать свою замену по шагам. Калории пересчитаются сами: старое блюдо вычтется, новое добавится.</p>' +
+                    '<p><b>Съела что-то не из плана?</b> Ниже есть раздел «Свой продукт»: впиши название и калории — они добавятся в счёт.</p>' +
+                    '<p><b>Отметки хранятся до конца дня.</b> Можно закрыть кабинет и вернуться позже — всё останется на месте. Новый день начинается с чистого счёта.</p>' +
+                    '<p><b>Не гонись за точностью до грамма.</b> Калории посчитаны по средним значениям и могут чуть отличаться от твоих продуктов. Это нормально — важна общая картина дня.</p>');
+                // Теория бюджета — в «? Подробнее» прямо на плашке (budHelp выше).
+
+                const cheatBanner = plan.cheat
+                    ? '<div class="nutri-cheat"><span class="emo">🔥</span> Сегодня читмил: ужин свободный — можно то, чего давно хотелось. Завтрак и обед — по плану.</div>'
+                    : '';
+                // Пройденный день — только справочник: план и рецепты остаются, а весь
+                // интерактив счёта (плашка «Съедено», шкалы бюджета, добор, «Свой
+                // продукт», «завтра») — только на текущем дне: день прожит, счёт
+                // зафиксирован, «поиграть галочками» задним числом нельзя.
+                if (!liveDay) {
+                    return '<section class="day-block">' +
+                        '<div class="day-block__head"><span class="ic">' + icon + '</span>' +
+                            '<div><h2>План питания</h2><div class="sub">' + escapeHtml(plan.phase) + ' · день пройден, план — для справки</div></div></div>' +
+                        normHtml + cheatBanner +
+                        '<div class="meals">' + rows + '</div>' +
+                        renderConstructor(false) + '</section>';
+                }
+
+                return '<section class="day-block">' +
+                    '<div class="day-block__head"><span class="ic">' + icon + '</span>' +
+                        '<div><h2>План питания</h2><div class="sub">' + escapeHtml(plan.phase) + ' · любое блюдо можно заменить</div></div></div>' +
+                    normHtml + cheatBanner +
+                    '<div class="meals">' + rows + '</div>' +
+                    totalHtml + budgetHtml + addedHtml + helpHtml +
+                    renderCustom(!!t) + renderConstructor(!!t) + tomorrowHtml() + '</section>';
+            }
+
+            // ─── Хелперы блока питания (итог/бюджет/добор/карточки блюд) ───
+            // Раскрывашка-подсказка: вместо постоянного обучающего текста — компактный
+            // вопрос со значком «?», подробный ответ по тапу (просьба владельца
+            // 10.07.2026 — минимализм для разобравшихся, ликбез для новичков).
+            // body — доверенный HTML (наши тексты), q — простая строка.
+            function qaHtml(q, body) {
+                return '<details class="qa"><summary class="qa__q"><span class="qa__ic" aria-hidden="true">?</span>' +
+                    q + '</summary><div class="qa__body">' + body + '</div></details>';
+            }
+            // Инлайн Б/Ж/У (для тёмной плашки итога).
+            function macroMini(o) {
+                return '<i><em class="mp">Б</em>' + o.p + '</i><i><em class="mf">Ж</em>' + o.f + '</i><i><em class="mc">У</em>' + o.c + '</i>';
+            }
+            // Состав блюда столбиком и короткое имя блюда: сама логика переехала
+            // в nutrition-data.js (nutritionMealParts/nutritionMealName) — с
+            // 11.07.2026 ей пользуется и список покупок «по дням и блюдам» на
+            // дашборде. Здесь — тонкие обёртки, чтобы не трогать все вызовы.
+            function mealParts(text) { return nutritionMealParts(text); }
+            function mealShortName(text) { return nutritionMealName(text); }
+            // Карточка блюда: <details> со свёрнутой сводкой и раскрытым составом.
+            // i — индекс приёма в plan.meals (ключ замены), addable — есть бюджет
+            // (анкета заполнена): тогда блюдо можно заменить сборкой из Конструктора.
+            // qr — быстрые замены (готовые комбинации, замена одним тапом).
+            function mealCard(m, i, addable, qr) {
+                const kc = mealKcal(m), hasMacros = (m.p != null);
+                let cls = 'meal-acc', tagTxt = '', tagCls = '';
+                if (m.cheat) { cls += ' meal-acc--cheat'; tagTxt = 'читмил'; tagCls = 'cheat'; }
+                else if (m.treat) { cls += ' meal-acc--treat'; tagTxt = 'слот 20%'; tagCls = 'treat'; }
+                else if (m.diy) { cls += ' meal-acc--diy'; tagTxt = 'собери сам'; tagCls = 'diy'; }
+
+                // Галочка «съедено» — только у приёмов с макросами (читмил/«собери
+                // сам» в счёт не входят — их закрывает добор по Конструктору) и
+                // только на ТЕКУЩЕМ дне: пройденный день — справочник без счёта.
+                const eatBtn = (hasMacros && liveDay)
+                    ? '<button type="button" class="meal-eat" data-meal-eat="' + i + '" aria-pressed="false" aria-label="Отметить приём съеденным">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 7.5"/></svg>' +
+                      '</button>'
+                    : '<span class="meal-eat meal-eat--free" aria-hidden="true"></span>';
+
+                // Свёрнутая мета: [заменено] [бейдж] [ккал] — коротко, детали по тапу.
+                let meta = '';
+                if (hasMacros) meta += '<span class="meal-sum__tag tag--repl" data-repl-badge="' + i + '" hidden>заменено</span>';
+                if (tagTxt) meta += '<span class="meal-sum__tag tag--' + tagCls + '">' + tagTxt + '</span>';
+                // data-meal-k: при замене блюда paintNutri пишет сюда ккал замены,
+                // а не старого блюда (иначе свёрнутая строка врала бы).
+                if (hasMacros) meta += '<span class="meal-sum__k" data-meal-k="' + i + '">' + kc + ' ккал</span>';
+
+                // Раскрытое: состав столбиком (первая строка = само блюдо) + двойные
+                // веса ключевых продуктов + Б/Ж/У + замена. Читмил/«собери сам» —
+                // это инструкция-предложение, оставляем абзацем.
+                // Состав + cook + Б/Ж/У блюда ПЛАНА живут в обёртке [data-meal-orig]:
+                // при замене paintNutri её прячет — карточка «становится» заменой
+                // (иначе старый состав и Б/Ж/У оставались на виду и путали).
+                let orig;
+                if (m.cheat || m.diy) {
+                    orig = '<p class="meal-exp__text">' + escapeHtml(m.text) + '</p>';
+                } else {
+                    let li = '';
+                    mealParts(m.text).forEach(p => { li += '<li>' + escapeHtml(p) + '</li>'; });
+                    orig = '<ul class="meal-exp__list">' + li + '</ul>';
+                }
+                // «Рецепт» — пошаговое приготовление всплывающей шторкой (поле rec
+                // в данных; однострочный cook больше не рендерим — он вошёл в rec).
+                if (m.rec && m.rec.length && !m.cheat && !m.diy) {
+                    orig += '<button type="button" class="meal-recipe" data-recipe="' + i + '">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 21V5.5"/><path d="M20 18.5H6.5"/><path d="M8.5 7.5h7M8.5 11h4.5"/></svg>' +
+                        'Рецепт</button>';
+                }
+                if (hasMacros) {
+                    // Ккал не повторяем — они в шапке карточки, видны и в раскрытом виде.
+                    orig += '<div class="macros">' +
+                        '<span class="mac"><i class="mp">Б</i>' + m.p + '</span>' +
+                        '<span class="mac"><i class="mf">Ж</i>' + m.f + '</span>' +
+                        '<span class="mac"><i class="mc">У</i>' + m.c + '</span></div>';
+                }
+                let body = '<div data-meal-orig="' + i + '">' + orig + '</div>';
+                // «Слот 20%» — жаргон методички: объяснение спрятано за раскрывашку
+                // (просьба владельца 10.07.2026 — не мозолить глаза разобравшимся).
+                if (m.treat) {
+                    const choice = /из таблиц|на выбор/i.test(m.text);
+                    body += qaHtml('Что такое «слот 20%»?',
+                        '<p>«Слот 20%» — это законное место для вкусного в твоём дне. 80% еды — полезная база (белки, гарниры, овощи), а 20% — <b>разрешённая порция удовольствия</b>: шоколад, зефир, мороженое — до 200 ккал в день.</p>' +
+                        '<p>Это не «срыв», а часть плана: когда вкусняшка разрешена официально, тяга к сладкому не копится и не заканчивается перееданием.</p>' +
+                        '<p>Вкусняшку можно выбрать любую — нажми кнопку «Заменить» ниже, откроется весь список. Главное правило: <b>одна вкусняшка в день</b>, в перекус или сразу после еды.</p>' +
+                        (choice ? '<p>Цифры этого перекуса — примерные: выбери свою вкусняшку через «Заменить», и счёт станет точным.</p>' : ''));
+                }
+                if (hasMacros && liveDay) {
+                    body += '<div class="meal-repl" data-meal-repl="' + i + '" hidden></div>';
+                    if (addable) {
+                        // Одна кнопка «Заменить» (минимализм, просьба владельца
+                        // 11.07.2026): готовые варианты и сборка по шагам — внутри
+                        // шторки, списки не мозолят глаза до нужного момента.
+                        body += '<button type="button" class="con-jump" data-wiz-open="' + i + '">Заменить</button>';
+                    } else {
+                        // Без анкеты счёта нет — кнопка просто ведёт к таблицам.
+                        body += '<button type="button" class="con-jump" data-con-jump>Заменить блюдо — таблицы замен ниже ↓</button>';
+                    }
+                } else if (m.cheat) {
+                    body += '<div class="macros--free">Без подсчёта — наслаждайся 🔥</div>';
+                } else if (m.diy) {
+                    body += '<button type="button" class="con-jump" data-con-jump>Собери из таблиц замен ↓</button>';
+                }
+
+                // Свёрнутая строка — ТОЛЬКО слот («Завтрак/Обед/Ужин») крупно + ккал:
+                // названия блюд обрезались многоточием и мозолили глаза (просьба
+                // владельца 10.07.2026) — что внутри, видно по тапу.
+                return '<details class="' + cls + '">' +
+                    '<summary class="meal-sum">' + eatBtn +
+                        '<span class="meal-sum__when">' + escapeHtml(m.slot) + '</span>' +
+                        '<span class="meal-sum__meta">' + meta + '</span>' +
+                    '</summary>' +
+                    '<div class="meal-exp">' + body + '</div>' +
+                    '</details>';
+            }
+
+            // Короткое имя строки Конструктора для чипов/заголовков: до первого «/»
+            // или скобки («Куриное филе / индейка» → «Куриное филе», «Орехи (грецкие,
+            // миндаль)» → «Орехи»).
+            function shortItemName(name) {
+                return name.split('/')[0].replace(/\(.*$/, '').trim();
+            }
+            // Строка «как приготовить» позиции замены — из rec её строки Конструктора
+            // (по имени; «Свой продукт» и вкусняшки без rec — шага просто не будет).
+            function conRecFor(name) {
+                const con = nutritionConstructor();
+                if (!con) return '';
+                for (const g of con.groups)
+                    for (const r of g.rows)
+                        if (r.n === name && r.rec) return r.rec;
+                return '';
+            }
+            // Вес позиции замены человеком: «135 г сырой · ≈ 95 г готового».
+            // Направление сырой/сухой — как в Конструкторе (вес растёт → сухой).
+            function replWeight(a) {
+                const raw = a.raw || '', cooked = a.cooked || '';
+                if (!raw) return cooked;
+                if (!cooked || cooked === raw) return raw;
+                const fn = s => { const m2 = String(s).match(/\d+/); return m2 ? +m2[0] : null; };
+                const rw = fn(raw), cw = fn(cooked);
+                const state = (rw != null && cw != null && cw > rw) ? 'сухой' : 'сырой';
+                return raw + ' ' + state + ' · ≈ ' + cooked + ' готового';
+            }
+
+            // Вклад приёма i в счёт: заменённое блюдо считается своей заменой.
+            function mealInto(i, e) {
+                const r = nutri.repl[i];
+                if (r) r.items.forEach(a => { e.k += a.kcal; e.p += a.p; e.f += a.f; e.c += a.c; });
+                else { const m = nutri.meals[i]; e.k += m.kcal; e.p += m.p; e.f += m.f; e.c += m.c; }
+            }
+            // Съедено = отмеченные галочкой приёмы + добор из Конструктора
+            // (добор — то, что тапнула, когда съела; считается сразу).
+            function nutriEaten() {
+                const e = { k: 0, p: 0, f: 0, c: 0 };
+                Object.keys(nutri.meals).forEach(i => { if (nutri.eaten[i]) mealInto(i, e); });
+                nutri.added.forEach(a => { e.k += a.kcal; e.p += a.p; e.f += a.f; e.c += a.c; });
+                return e;
+            }
+            function nutriCounts() {
+                const all = Object.keys(nutri.meals).length;
+                const done = Object.keys(nutri.meals).filter(i => nutri.eaten[i]).length;
+                return { all: all, done: done };
+            }
+            function totalInner() {
+                const e = nutriEaten(), c = nutriCounts();
+                const extra = (Object.keys(nutri.repl).length ? ' · замена' : '') +
+                    (nutri.added.length ? ' · добор' : '');
+                const lbl = 'Съедено · отмечено ' + c.done + ' из ' + c.all + extra;
+                return '<span class="nutri-total__lbl">' + lbl + '</span>' +
+                    '<span class="nutri-total__nums">≈ <b>' + e.k + '</b> ккал' + macroMini(e) + '</span>';
+            }
+            // Бюджет: 4 живые шкалы «съедено X из Y» — калории + Б/Ж/У (просьба
+            // владельца 10.07.2026: полноценный бюджет, стремимся заполнить все
+            // шкалы к концу дня; вся теория — в «Подробнее», текстов-подсказок нет).
+            function budgetInner() {
+                const t = nutri.t, e = nutriEaten();
+                const r = v => Math.round(Math.abs(v) / 10) * 10;
+                const left = t.kcal - e.k;
+                // ✓ при 97–107% цели («день закрыт»), заметный перебор — золотом.
+                // Люфт, чтобы 101–107% не выглядели ошибкой: цифры-то оценочные.
+                // У белка перебор — не ошибка (сами советуем добирать белком):
+                // «сверх» только от +35%, до того — цель закрыта ✓.
+                function scale(lbl, val, goal, unit, protein) {
+                    const pct = Math.min(100, Math.round(val / goal * 100));
+                    const over = val > goal * (protein ? 1.35 : 1.07);
+                    const done = !over && val >= goal * 0.97;
+                    return '<div class="bud' + (done ? ' bud--done' : '') + (over ? ' bud--over' : '') + '">' +
+                        '<div class="bud__t"><span>' + lbl + '</span>' +
+                        '<b>' + Math.round(val) + ' <em>из ' + goal + ' ' + unit + '</em>' + (done ? ' <i>✓</i>' : '') + '</b></div>' +
+                        '<div class="nutri-budget__bar"><i style="width:' + pct + '%"></i></div></div>';
+                }
+                return '<div class="nutri-budget__head"><span>Бюджет дня</span>' +
+                    (left < 0
+                        ? '<b class="over">+ ' + r(left) + ' ккал сверх</b>'
+                        : '<b class="ok">осталось ≈ ' + r(left) + ' ккал</b>') + '</div>' +
+                    scale('Калории', e.k, t.kcal, 'ккал') +
+                    scale('Белок', e.p, t.protein, 'г', true) +
+                    scale('Жиры', e.f, t.fat, 'г') +
+                    scale('Углеводы', e.c, t.carb, 'г');
+            }
+            function addedInner() {
+                if (!nutri || !nutri.added.length) return '';
+                let chips = '';
+                nutri.added.forEach((a, i) => {
+                    chips += '<button type="button" class="add-chip" data-add-rm="' + i + '">' +
+                        escapeHtml(a.name) + ' · ' + a.kcal + ' <span aria-hidden="true">✕</span></button>';
+                });
+                return '<div class="nutri-added__head"><span>Добор из таблиц</span>' +
+                    '<button type="button" class="nutri-added__reset" data-add-reset>Сбросить</button></div>' +
+                    '<div class="nutri-added__chips">' + chips + '</div>';
+            }
+            function paintNutri() {
+                if (!nutri) return;
+                const totEl = root.querySelector('[data-nutri-total]');
+                const budEl = root.querySelector('[data-nutri-budget]');
+                const addEl = root.querySelector('[data-nutri-added]');
+                if (totEl) totEl.innerHTML = totalInner();
+                if (budEl && nutri.t) budEl.innerHTML = budgetInner();
+                if (addEl) { addEl.innerHTML = addedInner(); addEl.hidden = !nutri.added.length; }
+
+                // Галочки «съедено» на карточках.
+                Object.keys(nutri.meals).forEach(i => {
+                    const btn = root.querySelector('[data-meal-eat="' + i + '"]');
+                    if (!btn) return;
+                    const on = !!nutri.eaten[i];
+                    btn.classList.toggle('is-on', on);
+                    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                    btn.closest('details').classList.toggle('meal-acc--eaten', on);
+                });
+
+                // Замены на карточках блюд: карточка «становится» заменой — состав
+                // плана прячется, вместо него состав замены С ВЕСАМИ и Б/Ж/У замены;
+                // свёрнутая строка показывает имя и ккал замены; выбранный чип
+                // быстрой замены подсвечен; «Вернуть блюдо плана» возвращает всё.
+                Object.keys(nutri.meals).forEach(i => {
+                    const r = nutri.repl[i];
+                    const box = root.querySelector('[data-meal-repl="' + i + '"]');
+                    const badge = root.querySelector('[data-repl-badge="' + i + '"]');
+                    if (badge) badge.hidden = !r;
+                    // Ккал в свёрнутой строке: у заменённого блюда — сумма замены.
+                    const kEl = root.querySelector('[data-meal-k="' + i + '"]');
+                    if (kEl) kEl.textContent =
+                        (r ? r.items.reduce((s, a) => s + a.kcal, 0) : nutri.meals[i].kcal) + ' ккал';
+                    // Состав/Б-Ж-У блюда плана прячем, пока действует замена.
+                    const orig = root.querySelector('[data-meal-orig="' + i + '"]');
+                    if (orig) orig.hidden = !!r;
+                    if (!box) return;
+                    box.closest('details').classList.toggle('meal-acc--replaced', !!r);
+                    if (r && r.items.length) {
+                        const sum = r.items.reduce((s, a) => s + a.kcal, 0);
+                        const rp = r.items.reduce((s, a) => s + a.p, 0);
+                        const rf = r.items.reduce((s, a) => s + a.f, 0);
+                        const rc = r.items.reduce((s, a) => s + a.c, 0);
+                        let rows = '';
+                        r.items.forEach((a, j) => {
+                            const w = replWeight(a);
+                            rows += '<li><span class="rr-n">' + escapeHtml(a.name) +
+                                (w ? '<em>' + escapeHtml(w) + '</em>' : '') + '</span>' +
+                                '<span class="rr-k">' + a.kcal + ' ккал</span>' +
+                                '<button type="button" class="rr-x" data-repl-rm="' + i + ':' + j + '" aria-label="Убрать из замены">✕</button></li>';
+                        });
+                        // Пояснение про сырой вес не дублируем: он подписан в каждой
+                        // строке, правило «без жарки» — в раскрывашке про замены.
+                        // «Рецепт» — если хоть у одной позиции есть строка готовки
+                        // (просьба владельца 10.07.2026: замены тоже с рецептами).
+                        const recBtn = r.items.some(a => conRecFor(a.name))
+                            ? '<button type="button" class="meal-recipe" data-recipe-repl="' + i + '">' +
+                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 21V5.5"/><path d="M20 18.5H6.5"/><path d="M8.5 7.5h7M8.5 11h4.5"/></svg>' +
+                                'Рецепт</button>'
+                            : '';
+                        // Пока приём не отмечен съеденным — подсказываем следующий шаг
+                        // (жалоба с теста 11.07.2026: собрала замену, а счёт пустой).
+                        const eatHint = !nutri.eaten[i]
+                            ? '<p class="meal-repl__hint">Съела? Нажми на кружок слева от приёма — калории попадут в счёт.</p>'
+                            : '';
+                        box.innerHTML = '<div class="meal-repl__h">Твоя замена · ≈ ' + sum + ' ккал</div>' +
+                            '<ul class="repl-list">' + rows + '</ul>' + recBtn +
+                            '<div class="macros macros--repl">' +
+                                '<span class="mac"><i class="mp">Б</i>' + rp + '</span>' +
+                                '<span class="mac"><i class="mf">Ж</i>' + rf + '</span>' +
+                                '<span class="mac"><i class="mc">У</i>' + rc + '</span></div>' +
+                            eatHint +
+                            '<button type="button" class="meal-repl__restore" data-repl-restore="' + i + '">← Вернуть блюдо плана (' + nutri.meals[i].kcal + ' ккал)</button>';
+                        box.hidden = false;
+                    } else { box.hidden = true; box.innerHTML = ''; }
+                });
+
+                nutriSave(); // каждое изменение счёта — в localStorage (текущий день)
+            }
+            // Скролл к счёту калорий (просьба владельца: тап по строке Конструктора →
+            // сразу видно, как изменился счёт) + мягкая вспышка плашки.
+            function scrollToTotal() {
+                const el = root.querySelector('[data-nutri-total]');
+                if (!el) return;
+                const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+                el.classList.remove('nutri-total--flash');
+                void el.offsetWidth; // перезапуск анимации
+                el.classList.add('nutri-total--flash');
+                setTimeout(() => el.classList.remove('nutri-total--flash'), 1200);
+            }
+            // Скролл к карточке блюда i после сборки замены в визарде: карточка
+            // показывает «Твоя замена» и галочку «съедено» — следующий шаг клиента
+            // именно тут, а не у пустой плашки бюджета (жалоба с теста 11.07.2026).
+            function scrollToMeal(i) {
+                const box = root.querySelector('[data-meal-repl="' + i + '"]');
+                const card = box && box.closest('details');
+                if (!card) return;
+                card.open = true;
+                const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                card.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+                card.classList.remove('meal-acc--flash');
+                void card.offsetWidth; // перезапуск анимации
+                card.classList.add('meal-acc--flash');
+                setTimeout(() => card.classList.remove('meal-acc--flash'), 1200);
+            }
+            // Тап/Enter по строке Конструктора — добор (и скролл к счёту). Чипы
+            // добора и замен убираются по одному; «Сбросить» чистит добор целиком.
+            function wireNutri() {
+                if (!nutri) return;
+                // Первая отрисовка: после восстановления из localStorage надо сразу
+                // показать галочки/бейджи/чипы (HTML рисуется до восстановления).
+                paintNutri();
+
+                // Галочка «съедено»: кнопка живёт внутри <summary> — глушим
+                // раскрытие карточки, тап только переключает отметку.
+                root.querySelectorAll('[data-meal-eat]').forEach(btn => {
+                    btn.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        const i = btn.dataset.mealEat;
+                        if (nutri.eaten[i]) delete nutri.eaten[i];
+                        else nutri.eaten[i] = true;
+                        paintNutri();
+                    });
+                });
+
+                function addFood(el) {
+                    // raw/cooked — граммовка порции (из Конструктора): в чипе добора
+                    // видно, СКОЛЬКО взвешивать, а не только имя и ккал.
+                    nutri.added.push({ name: el.dataset.name, kcal: +el.dataset.kcal, p: +el.dataset.p, f: +el.dataset.f, c: +el.dataset.c,
+                        raw: el.dataset.raw || '', cooked: el.dataset.cooked || '' });
+                    paintNutri();
+                    scrollToTotal();
+                    el.classList.add('con-row--added');
+                    setTimeout(() => el.classList.remove('con-row--added'), 450);
+                }
+                root.querySelectorAll('[data-add-food]').forEach(el => {
+                    el.addEventListener('click', () => addFood(el));
+                    el.addEventListener('keydown', (ev) => {
+                        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); addFood(el); }
+                    });
+                });
+                // «Свой продукт»: ручной ввод ккал/Б-Ж-У → в добор, как строка Конструктора.
+                const cform = root.querySelector('[data-custom-form]');
+                if (cform) cform.addEventListener('submit', (ev) => {
+                    ev.preventDefault();
+                    const err = cform.querySelector('[data-cc-err]');
+                    const kcal = parseFloat(cform.querySelector('[data-cc-kcal]').value);
+                    // Разные причины — разный текст (пустое поле ≠ подозрительно много).
+                    if (!(kcal > 0)) { err.textContent = 'Впиши калории — без них не посчитаем.'; err.hidden = false; return; }
+                    if (kcal > 3000) { err.textContent = 'Больше 3000 ккал за один продукт — похоже на опечатку. Проверь число.'; err.hidden = false; return; }
+                    err.hidden = true;
+                    const num = sel => {
+                        const v = parseFloat(cform.querySelector(sel).value);
+                        return (isFinite(v) && v > 0) ? Math.min(300, Math.round(v)) : 0;
+                    };
+                    const name = (cform.querySelector('[data-cc-name]').value || '').trim() || 'Свой продукт';
+                    nutri.added.push({ name: name, kcal: Math.round(kcal), p: num('[data-cc-p]'), f: num('[data-cc-f]'), c: num('[data-cc-c]') });
+                    paintNutri();
+                    scrollToTotal();
+                    cform.reset();
+                });
+                const addEl = root.querySelector('[data-nutri-added]');
+                if (addEl) {
+                    addEl.addEventListener('click', (ev) => {
+                        const rm = ev.target.closest('[data-add-rm]');
+                        const reset = ev.target.closest('[data-add-reset]');
+                        if (rm) { nutri.added.splice(+rm.dataset.addRm, 1); paintNutri(); }
+                        else if (reset) { nutri.added = []; paintNutri(); }
+                    });
+                }
+                // Управление заменой — делегированно (кнопки рисуются paintNutri).
+                root.addEventListener('click', (ev) => {
+                    // «Рецепт» — всплывающая шторка с шагами приготовления
+                    // (у блюда плана — из meal.rec, у замены — из rec её позиций).
+                    const rb = ev.target.closest('[data-recipe]');
+                    if (rb) { openRecipe(+rb.dataset.recipe); return; }
+                    const rr = ev.target.closest('[data-recipe-repl]');
+                    if (rr) { openRecipe(+rr.dataset.recipeRepl, true); return; }
+                    // «Заменить» — шторка: готовые варианты + сборка по шагам.
+                    const wo = ev.target.closest('[data-wiz-open]');
+                    if (wo) { openWizard(+wo.dataset.wizOpen); return; }
+                    const rm = ev.target.closest('[data-repl-rm]');
+                    if (rm) {
+                        const parts = rm.dataset.replRm.split(':');
+                        const r = nutri.repl[parts[0]];
+                        if (r) {
+                            r.items.splice(+parts[1], 1);
+                            // Убрали последнюю позицию — блюдо плана возвращается.
+                            if (!r.items.length) delete nutri.repl[parts[0]];
+                            paintNutri();
+                        }
+                        return;
+                    }
+                    const rest = ev.target.closest('[data-repl-restore]');
+                    if (rest) {
+                        delete nutri.repl[rest.dataset.replRestore];
+                        paintNutri();
+                    }
+                });
+            }
+
+            // ─── Шторка «Рецепт»: блюдо плана (repl=false) — ингредиенты из текста
+            // блюда + шаги из meal.rec; замена (repl=true) — позиции замены с
+            // граммовкой + шаги из rec строк Конструктора (готовые к еде — без шага).
+            const recSheet = document.querySelector('[data-recipe-sheet]');
+            function openRecipe(i, repl) {
+                const m = planMeals && planMeals[i];
+                if (!m || !recSheet) return;
+                let title, ing = '', steps = '';
+                if (repl) {
+                    const r = nutri && nutri.repl[i];
+                    if (!r || !r.items.length) return;
+                    title = r.items.map(a => shortItemName(a.name)).join(' + ');
+                    r.items.forEach(a => {
+                        const w = replWeight(a);
+                        ing += '<li>' + escapeHtml(a.name + (w ? ' — ' + w : '')) + '</li>';
+                        const s = conRecFor(a.name);
+                        if (s) steps += '<li>' + escapeHtml(s) + '</li>';
+                    });
+                } else {
+                    if (!m.rec || !m.rec.length) return;
+                    title = mealShortName(m.text);
+                    mealParts(m.text).forEach(p => { ing += '<li>' + escapeHtml(p) + '</li>'; });
+                    m.rec.forEach(s => { steps += '<li>' + escapeHtml(s) + '</li>'; });
+                }
+                recSheet.querySelector('[data-recipe-slot]').textContent = m.slot;
+                recSheet.querySelector('[data-recipe-title]').textContent = title;
+                recSheet.querySelector('[data-recipe-body]').innerHTML =
+                    '<div class="rec-h">Понадобится</div><ul class="rec-ing">' + ing + '</ul>' +
+                    '<div class="rec-h">Готовим</div><ol class="rec-steps">' + steps + '</ol>' +
+                    '<p class="rec-note">Готовим без жарки в масле — варим, запекаем или тушим: так калории совпадают с планом.</p>';
+                recSheet.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeRecipe() {
+                if (!recSheet) return;
+                recSheet.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+            if (recSheet) {
+                recSheet.querySelector('[data-recipe-close]').addEventListener('click', closeRecipe);
+                recSheet.addEventListener('click', (e) => { if (e.target === recSheet) closeRecipe(); });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && recSheet.classList.contains('open')) closeRecipe();
+                });
+            }
+
+            // ─── Шторка «Заменить» — единая точка замены блюда (минимализм, просьба
+            // владельца 11.07.2026: на карточке одна кнопка, варианты не мозолят
+            // глаза). Первый экран — ГОТОВЫЕ варианты (бывшие чипы, 1 тап = замена)
+            // + кнопка «Собрать свою замену по шагам» → пошаговый визард: белок →
+            // гарнир → жир (шаги 2+ можно пропустить); у перекуса (слот 20%) сразу
+            // один шаг — список вкусняшек. Продукты шага отфильтрованы по слоту
+            // строки Конструктора (slot: b — завтрак, l — обед, d — ужин и их
+            // комбинации; 11.07.2026 обед и ужин разведены под «ПРАВИЛО ПРИЁМОВ»
+            // из nutrition-data.js): на завтрак не предлагаем гуляш, на обед —
+            // творог, на ужин — крупы и картофель (ужин = лёгкий белок + овощи,
+            // шаг «гарнир» там пустой и исчезает — визард короче на шаг).
+            // Итог кладётся в nutri.repl[i]: бейдж «заменено»,
+            // ккал в свёрнутой строке, «Рецепт» замены, «Вернуть» и персист
+            // работают той же механикой без правок. Закрыли шторку, не дособрав, —
+            // ничего не меняется (прежняя замена, если была, остаётся).
+            const wizSheet = document.querySelector('[data-wiz-sheet]');
+            // picked — РАЗРЕЖЕННЫЙ массив по индексу шага (шаг можно пропустить,
+            // «Назад» чистит выбор только того шага, куда вернулись).
+            let wiz = null; // { i, meal, mode:'quick'|'steps', quick, steps:[{t, rows, skip, last}], step, picked:[step→item] }
+            function wizItem(r) {
+                return { name: r.n, kcal: r.kcal, p: r.p, f: r.f, c: r.c,
+                    raw: r.raw || r.w || '', cooked: r.cooked || '' };
+            }
+            function openWizard(i) {
+                const m = planMeals && planMeals[i];
+                if (!m || !wizSheet || !nutri || !nutri.meals[i]) return;
+                const byAbc = (a, b) => a.n.localeCompare(b.n, 'ru');
+                let steps;
+                if (m.treat) {
+                    const treats = nutritionTreats();
+                    if (!treats) return;
+                    steps = [{ t: 'Выбери вкусняшку', rows: treats.rows.slice().sort(byAbc) }];
+                } else {
+                    const con = nutritionConstructor();
+                    if (!con) return;
+                    const slot = /завтрак/i.test(m.slot) ? 'b' : (/ужин/i.test(m.slot) ? 'd' : 'l');
+                    const titles = ['Выбери белок', 'Выбери гарнир', 'Добавь жир — по желанию'];
+                    steps = con.groups.map((g, gi) => ({
+                        t: titles[gi] || g.title,
+                        rows: g.rows.filter(r => (r.slot || 'bld').indexOf(slot) !== -1).sort(byAbc),
+                        skip: gi === 2, // жир — необязательный шаг
+                    })).filter(s => s.rows.length);
+                }
+                steps[steps.length - 1].last = true;
+                // Готовые варианты: у перекуса их нет — там первый шаг и есть весь
+                // список вкусняшек, промежуточный экран был бы лишним тапом.
+                const combos = (!m.treat && nutri.quick[i] && nutri.quick[i].length) ? nutri.quick[i] : null;
+                wiz = { i: i, meal: nutri.meals[i], mode: combos ? 'quick' : 'steps',
+                    quick: combos, steps: steps, step: 0, picked: [] };
+                paintWizard();
+                wizSheet.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+            // Первый экран «Заменить блюдо»: готовые комбинации (1 тап = замена
+            // целиком, повторный тап по отмеченной ✓ — вернуть блюдо плана) +
+            // золотая кнопка «Собрать свою замену по шагам».
+            function paintWizQuick() {
+                wizSheet.querySelector('[data-wiz-prog]').innerHTML = '';
+                const cur = nutri.repl[wiz.i];
+                wizSheet.querySelector('[data-wiz-sum]').innerHTML =
+                    '<b>Блюдо плана ≈ ' + wiz.meal.kcal + ' ккал</b><span>' +
+                    (cur && cur.q ? 'твоя замена отмечена ✓ — нажми на неё ещё раз, чтобы вернуть блюдо плана'
+                        : 'нажми на вариант — он заменит блюдо целиком') + '</span>';
+                let cards = '';
+                wiz.quick.forEach((c, j) => {
+                    const on = !!(cur && cur.q === c.label);
+                    const w = c.items.map(a => shortItemName(a.name) + (a.raw ? ' ' + a.raw : (a.cooked ? ' ' + a.cooked : ''))).join(' + ');
+                    const p = c.items.reduce((s, a) => s + a.p, 0);
+                    const f = c.items.reduce((s, a) => s + a.f, 0);
+                    const cc = c.items.reduce((s, a) => s + a.c, 0);
+                    cards += '<button type="button" class="wiz-card' + (on ? ' is-on' : '') + '" data-wiz-quick="' + j + '">' +
+                        '<span class="wiz-card__n">' + (on ? '✓ ' : '') + escapeHtml(c.label) + '</span>' +
+                        '<span class="wiz-card__w">' + escapeHtml(w) + '</span>' +
+                        '<span class="wiz-card__meta"><b>≈ ' + c.kcal + ' ккал</b>' +
+                            '<i>Б ' + p + '</i><i>Ж ' + f + '</i><i>У ' + cc + '</i></span></button>';
+                });
+                wizSheet.querySelector('[data-wiz-body]').innerHTML =
+                    '<div class="wiz-step">Готовые варианты — одно нажатие</div>' +
+                    '<div class="wiz-cards">' + cards + '</div>' +
+                    '<div class="wiz-foot"><button type="button" class="btn btn--gold wiz-done" data-wiz-build>Собрать свою замену по шагам</button></div>';
+                wizSheet.querySelector('.sheet').scrollTop = 0;
+            }
+            // Тап по готовому варианту: применить замену (или вернуть блюдо плана,
+            // если тапнули уже выбранный ✓) и закрыть шторку.
+            function wizQuick(j) {
+                const combo = wiz.quick && wiz.quick[j];
+                if (!combo) return;
+                const i = wiz.i;
+                const cur = nutri.repl[i];
+                closeWizard();
+                if (cur && cur.q === combo.label) { delete nutri.repl[i]; paintNutri(); return; }
+                nutri.repl[i] = { items: combo.items.map(a => Object.assign({}, a)), q: combo.label };
+                paintNutri();
+                scrollToMeal(i);
+            }
+            function paintWizard() {
+                if (!wiz) return;
+                wizSheet.querySelector('[data-wiz-slot]').textContent = wiz.meal.slot;
+                // «Собери замену» — только у многошаговой сборки; экран готовых
+                // вариантов и одношаговый перекус — просто «Заменить блюдо».
+                wizSheet.querySelector('#wiz-title').textContent =
+                    (wiz.mode === 'quick' || wiz.steps.length === 1) ? 'Заменить блюдо' : 'Собери замену';
+                if (wiz.mode === 'quick') { paintWizQuick(); return; }
+                const st = wiz.steps[wiz.step];
+                const chosen = wiz.picked.filter(Boolean);
+                const sum = chosen.reduce((s, a) => s + a.kcal, 0);
+                // Живое сравнение с блюдом плана (та же логика, что была у липкой
+                // панели): вровень ±40 / легче / плотнее — чтобы замена вышла равноценной.
+                const diff = wiz.meal.kcal - sum;
+                let hint;
+                if (!chosen.length) hint = 'нажми на карточку — она попадёт в замену';
+                else if (Math.abs(diff) <= 40) hint = 'вровень с блюдом плана 👌';
+                else if (diff > 0) hint = 'легче блюда на ≈ ' + diff + ' ккал';
+                else hint = 'плотнее блюда на ≈ ' + (-diff) + ' ккал';
+                // Прогресс — ЗАМЕТНО (клиент на тесте жал ✕, не поняв, что шагов
+                // несколько): полоски-сегменты + «Шаг N из M» крупно + сверху же
+                // кнопка пропуска шагов 2+ (просьба владельца 11.07.2026).
+                // ⚠️ Пропустить можно ЛЮБОЙ шаг после белка (и гарнир, и жир) —
+                // обязателен только белок (шаг 0, там кнопки пропуска нет). Это
+                // осознанно: визард должен быть лёгким (0.6.63 — клиент жаловался на
+                // сложность). st.skip управляет лишь текстом футера «Готово без жира»,
+                // а не тем, что шаг пропускаем. Недобор виден в подсказке «легче на N ккал».
+                let prog = '';
+                if (wiz.steps.length > 1) {
+                    let segs = '';
+                    wiz.steps.forEach((s, si) => {
+                        segs += '<i class="' + (si < wiz.step ? 'is-done' : (si === wiz.step ? 'is-on' : '')) + '"></i>';
+                    });
+                    prog = '<div class="wiz-prog__segs">' + segs + '</div>' +
+                        '<div class="wiz-prog__row"><b>Шаг ' + (wiz.step + 1) + ' из ' + wiz.steps.length + '</b>' +
+                        (wiz.step > 0
+                            ? '<button type="button" class="wiz-skip" data-wiz-skip>' +
+                                (st.last ? 'Готово без этого шага ✓' : 'Пропустить шаг →') + '</button>'
+                            : '') +
+                        '</div>';
+                }
+                wizSheet.querySelector('[data-wiz-prog]').innerHTML = prog;
+                wizSheet.querySelector('[data-wiz-sum]').innerHTML =
+                    '<b>Выбрано ≈ ' + sum + ' ккал · блюдо было ' + wiz.meal.kcal + '</b><span>' + hint + '</span>';
+                let cards = '';
+                st.rows.forEach((r, j) => {
+                    const w = replWeight(wizItem(r));
+                    cards += '<button type="button" class="wiz-card" data-wiz-pick="' + j + '">' +
+                        '<span class="wiz-card__n">' + escapeHtml(r.n) + '</span>' +
+                        (w ? '<span class="wiz-card__w">' + escapeHtml(w) + '</span>' : '') +
+                        '<span class="wiz-card__meta"><b>≈ ' + r.kcal + ' ккал</b>' +
+                            '<i>Б ' + r.p + '</i><i>Ж ' + r.f + '</i><i>У ' + r.c + '</i></span></button>';
+                });
+                // «← Назад» и на шаге 1, если пришли с экрана готовых вариантов.
+                const canBack = wiz.step > 0 || !!wiz.quick;
+                let foot = '';
+                if (canBack || st.skip) {
+                    foot = '<div class="wiz-foot">' +
+                        (canBack ? '<button type="button" class="wiz-back" data-wiz-back>← Назад</button>' : '') +
+                        (st.skip ? '<button type="button" class="btn btn--gold wiz-done" data-wiz-done>Готово без жира</button>' : '') +
+                        '</div>';
+                }
+                wizSheet.querySelector('[data-wiz-body]').innerHTML =
+                    '<div class="wiz-step">' + st.t + '</div><div class="wiz-cards">' + cards + '</div>' + foot;
+                wizSheet.querySelector('.sheet').scrollTop = 0;
+            }
+            // Тап по карточке = позиция выбрана; не последний шаг — идём дальше,
+            // последний (жир/вкусняшка) — сразу «Готово».
+            function wizPick(j) {
+                const st = wiz.steps[wiz.step];
+                if (!st.rows[j]) return;
+                wiz.picked[wiz.step] = wizItem(st.rows[j]);
+                if (st.last) { wizDone(); return; }
+                wiz.step++;
+                paintWizard();
+            }
+            function wizDone() {
+                const i = wiz.i;
+                const items = wiz.picked.filter(Boolean);
+                if (items.length) nutri.repl[i] = { items: items };
+                closeWizard();
+                paintNutri();
+                // Возвращаем к КАРТОЧКЕ блюда (не к бюджету: он без галочки «съедено»
+                // пустой — клиент на тесте не понял, куда делась замена).
+                if (items.length) scrollToMeal(i);
+            }
+            function closeWizard() {
+                if (!wizSheet) return;
+                wiz = null;
+                wizSheet.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+            if (wizSheet) {
+                wizSheet.querySelector('[data-wiz-close]').addEventListener('click', closeWizard);
+                wizSheet.addEventListener('click', (e) => {
+                    if (e.target === wizSheet) { closeWizard(); return; }
+                    if (!wiz) return;
+                    const qk = e.target.closest('[data-wiz-quick]');
+                    if (qk) { wizQuick(+qk.dataset.wizQuick); return; }
+                    if (e.target.closest('[data-wiz-build]')) {
+                        // С экрана готовых вариантов — в пошаговую сборку.
+                        wiz.mode = 'steps'; paintWizard(); return;
+                    }
+                    const pick = e.target.closest('[data-wiz-pick]');
+                    if (pick) { wizPick(+pick.dataset.wizPick); return; }
+                    if (e.target.closest('[data-wiz-skip]')) {
+                        // Пропуск текущего шага: дальше без выбора; последний — готово.
+                        const st = wiz.steps[wiz.step];
+                        if (st.last) { wizDone(); return; }
+                        wiz.step++; paintWizard(); return;
+                    }
+                    if (e.target.closest('[data-wiz-back]')) {
+                        // Назад: чистим выбор шага, куда вернулись (пропущенный шаг
+                        // выбора не имеет — picked разрежен по индексу шага). С шага 1 —
+                        // назад к экрану готовых вариантов (если он был).
+                        if (wiz.step === 0) { wiz.mode = 'quick'; wiz.picked = []; paintWizard(); return; }
+                        wiz.step--; wiz.picked[wiz.step] = null; paintWizard(); return;
+                    }
+                    if (e.target.closest('[data-wiz-done]')) wizDone();
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && wizSheet.classList.contains('open')) closeWizard();
+                });
+            }
+
+            // ─── Быстрые замены: готовые комбинации из строк Конструктора ───
+            // Владельская боль: «собери замену из таблиц» — квест для аудитории.
+            // Даём 2–3 готовых варианта, ближайших по калорийности к блюду; они —
+            // первый экран шторки «Заменить» (тап = блюдо заменено целиком).
+            // Перекусу (слот 20%) комбо не нужны: его шторка сразу открывает весь
+            // список вкусняшек — промежуточный экран был бы лишним тапом.
+            function buildQuickReplaces(plan) {
+                const con = nutritionConstructor();
+                if (!con) return {};
+                const rowByName = {};
+                con.groups.forEach(g => g.rows.forEach(r => { rowByName[r.n] = r; }));
+                // raw/cooked — граммовка порции: блок замены показывает, сколько взвешивать.
+                const item = r => ({ name: r.n, kcal: r.kcal, p: r.p, f: r.f, c: r.c,
+                    raw: r.raw || r.w || '', cooked: r.cooked || '' });
+                // [подпись, строки Конструктора, «такой белок уже в блюде» (не предлагать), слоты: b(завтрак)/l(обед)/d(ужин)]
+                // Обед — с плотным гарниром, ужин — лёгкий белок + овощи (овощи
+                // не считаем, в items только белок и масло) — «ПРАВИЛО ПРИЁМОВ».
+                const COMBOS = [
+                    ['Курица + гречка', ['Куриное филе / индейка', 'Гречка / бурый рис'], /кури|индей/i, 'l'],
+                    ['Треска + картофель + масло', ['Белая рыба (треска, минтай)', 'Картофель', 'Растительное масло (оливковое/подсолнечное)'], /рыб|треск|минтай|горбуш|кета/i, 'l'],
+                    ['Говядина + перловка', ['Постная говядина', 'Перловка / пшено'], /говя/i, 'l'],
+                    ['Креветки + макароны', ['Креветки / кальмары', 'Макароны из твёрдых сортов'], /кревет|кальмар|морепрод/i, 'l'],
+                    ['Творог + орехи', ['Творог 2–5%', 'Орехи (грецкие, миндаль)'], /творо|сырник|запеканк/i, 'bd'],
+                    ['Яйца + цельнозерновой хлеб', ['Куриные яйца', 'Хлеб цельнозерновой / ржаной'], /яйц|яиц|омлет|скрембл|овсяноблин/i, 'b'],
+                    ['Овсянка + яйца', ['Овсяные хлопья', 'Куриные яйца'], /овся|каша/i, 'b'],
+                    ['Курица + овощи с маслом', ['Куриное филе / индейка', 'Растительное масло (оливковое/подсолнечное)'], /кури|индей/i, 'd'],
+                    ['Треска + овощи с маслом', ['Белая рыба (треска, минтай)', 'Растительное масло (оливковое/подсолнечное)'], /рыб|треск|минтай|горбуш|кета/i, 'd'],
+                    ['Креветки + овощи с маслом', ['Креветки / кальмары', 'Растительное масло (оливковое/подсолнечное)'], /кревет|кальмар|морепрод/i, 'd'],
+                ];
+                const q = {};
+                plan.meals.forEach((m, i) => {
+                    if (m.p == null || m.treat) return; // читмил/«собери сам»/перекус — без комбо
+                    const kc = mealKcal(m);
+                    const slot = /завтрак/i.test(m.slot) ? 'b' : (/ужин/i.test(m.slot) ? 'd' : 'l');
+                    const pool = COMBOS
+                        .filter(c => c[3].indexOf(slot) !== -1 && !c[2].test(m.text))
+                        .map(c => {
+                            const rs = c[1].map(nm => rowByName[nm]);
+                            if (rs.some(r => !r)) return null;
+                            return { label: c[0], kcal: rs.reduce((s, r) => s + r.kcal, 0), items: rs.map(item) };
+                        })
+                        .filter(Boolean);
+                    pool.sort((a, b) => Math.abs(a.kcal - kc) - Math.abs(b.kcal - kc));
+                    if (pool.length) q[i] = pool.slice(0, 3);
+                });
+                return q;
+            }
+
+            // ─── «Что готовить завтра» — меню следующего дня одной строкой ───
+            // Чтобы с вечера разморозить мясо / замочить крупу. Только в рамках
+            // тарифа (меню платных дней триалу не светим) и пока есть день N+1.
+            function tomorrowHtml() {
+                if (typeof nutritionDay !== 'function') return '';
+                const nd = N + 1;
+                if (nd > 28 || nd > KF.tierMaxDay()) return '';
+                const p2 = nutritionDay(nd);
+                if (!p2) return '';
+                let rows = '';
+                p2.meals.forEach(m => {
+                    const kc = mealKcal(m);
+                    const nm = m.cheat ? 'Свободный приём — читмил'
+                        : (m.diy ? 'Собери сам из таблиц' : mealShortName(m.text));
+                    rows += '<li><span class="tmrw__slot">' + escapeHtml(m.slot) + '</span>' +
+                        '<span class="tmrw__name">' + escapeHtml(nm) + '</span>' +
+                        (kc ? '<span class="tmrw__k">' + kc + ' ккал</span>' : '') + '</li>';
+                });
+                // Продукты на завтра с весом (просьба владельца 11.07.2026): ключевые
+                // продукты из items, просуммированные по приёмам дня, вес — СЫРОЙ/СУХОЙ
+                // (как покупать и взвешивать; тот же rawFromCooked, что и списки недели).
+                // Овощи/яйца/молочное в items не выносятся — о них note ниже.
+                const prods = [];
+                p2.meals.forEach(m => {
+                    if (m.cheat) return;
+                    (m.items || []).forEach(it => {
+                        const raw = rawFromCooked(it.g, it.k);
+                        const name = it.n.replace(/\s*\([^)]*\)/g, '').trim();
+                        const dry = !!it.k && it.k > 1;
+                        const hit = prods.find(p => p.name === name && p.dry === dry);
+                        if (hit) hit.raw += raw; else prods.push({ name: name, raw: raw, dry: dry });
+                    });
+                });
+                let shopHtml = '';
+                if (prods.length) {
+                    let li = '';
+                    prods.forEach(p => {
+                        li += '<li><span>' + escapeHtml(p.name) + '</span><b>' + p.raw + ' г ' + (p.dry ? 'сухой' : 'сырой') + '</b></li>';
+                    });
+                    shopHtml = '<div class="tmrw__shop"><div class="tmrw__shop-h">Продукты на завтра</div>' +
+                        '<ul>' + li + '</ul>' +
+                        '<p class="tmrw__shop-note">Вес — сырых продуктов и сухих круп: столько взвесить до готовки. Овощи, яйца и молочное здесь не выписаны — они уже есть в списке покупок недели на главной странице.</p></div>';
+                }
+                // Советы подготовки: мясо/рыба (k ≤ 0.8 — картофель 0.83 не считается)
+                // → разморозить; перловка варится долго → замочить.
+                const hasMeat = p2.meals.some(m => (m.items || []).some(it => it.k && it.k <= 0.8));
+                const soak = p2.meals.some(m => /перловк/i.test(m.text));
+                let tips = '';
+                if (hasMeat) tips += 'достань мясо/рыбу из морозилки с вечера';
+                if (soak) tips += (tips ? '; ' : '') + 'перловку можно замочить на ночь — сварится быстрее';
+                const IC_PAN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 11.5h15v3.5a4 4 0 0 1-4 4h-7a4 4 0 0 1-4-4z"/><path d="M2.5 11.5h19"/><path d="M9.5 8.2c0-1.1.9-1.1.9-2.2M13.6 8.2c0-1.1.9-1.1.9-2.2"/></svg>';
+                return '<details class="tmrw"><summary><span class="ic">' + IC_PAN + '</span>Что готовить завтра · день ' + nd + '</summary>' +
+                    '<div class="tmrw__body"><ul class="tmrw__list">' + rows + '</ul>' + shopHtml +
+                    (tips ? '<p class="tmrw__tip">Подготовка: ' + tips + '.</p>' : '') +
+                    '</div></details>';
+            }
+
+            // «Свой продукт» — СВОЯ шторка над таблицами замен (просьба владельца
+            // 10.07.2026: «это как бы отдельно»): съела то, чего нет в таблицах
+            // (борщ у мамы, кафе) — вписала ккал (Б/Ж/У по желанию), попало в счёт
+            // как обычная строка Конструктора: добор или замена, персист со счётом.
+            function renderCustom(addable) {
+                if (!addable) return '';
+                return '<details class="con"><summary>Свой продукт</summary>' +
+                    '<p class="con__intro">Съела что-то не из плана? Впиши сюда — попадёт в дневной счёт.</p>' +
+                    '<form class="con-custom" data-custom-form novalidate>' +
+                        '<input type="text" class="cc-name" data-cc-name maxlength="60" placeholder="Например: борщ, 1 тарелка">' +
+                        '<div class="cc-nums">' +
+                            '<label><span>ккал</span><input type="number" inputmode="decimal" min="1" max="3000" data-cc-kcal placeholder="—"></label>' +
+                            '<label><span>Б, г</span><input type="number" inputmode="decimal" min="0" max="300" data-cc-p placeholder="0"></label>' +
+                            '<label><span>Ж, г</span><input type="number" inputmode="decimal" min="0" max="300" data-cc-f placeholder="0"></label>' +
+                            '<label><span>У, г</span><input type="number" inputmode="decimal" min="0" max="300" data-cc-c placeholder="0"></label>' +
+                        '</div>' +
+                        '<p class="cc-hint">Калории смотри на упаковке продукта; для домашних блюд впиши примерно. Белки, жиры и углеводы — по желанию.</p>' +
+                        '<p class="sheet-err" data-cc-err hidden>Впиши калории — без них не посчитаем.</p>' +
+                        '<button type="submit" class="btn btn--gold cc-add">Добавить в счёт</button>' +
+                    '</form></details>';
+            }
+
+            // Раскрывающийся Мастер-Конструктор 80/20 — таблицы замен + слот «Вкусняшки».
+            // addable — есть ли бюджет (анкета заполнена): тогда строки кликабельны и
+            // добавляют свои ккал/Б-Ж-У в дневной счёт (добор); иначе просто справка.
+            function renderConstructor(addable) {
+                const con = nutritionConstructor(), treats = nutritionTreats();
+                if (!con) return '';
+
+                // Первое число диапазона («40–45 г» → 40), чтобы понять направление
+                // изменения веса при готовке.
+                const firstNum = s => { const m = String(s).match(/\d+/); return m ? +m[0] : null; };
+
+                // Строка веса одной строкой во всю ширину карточки: продукт, меняющий
+                // вес, показывает сырой/сухой (по нему взвешивать и считать) + бледно
+                // «· ≈ N г готового». Продукт без изменения веса (raw без cooked) —
+                // один вес. Состояние сырой/сухой выводим из направления: cooked > raw
+                // → сухой (крупы), иначе сырой (мясо/рыба) — так картофель не «сухой».
+                function weightLine(raw, cooked) {
+                    if (!raw) return escapeHtml(cooked);
+                    if (!cooked || cooked === raw) return escapeHtml(raw);
+                    const rw = firstNum(raw), cw = firstNum(cooked);
+                    const state = (rw != null && cw != null && cw > rw) ? 'сухой' : 'сырой';
+                    return escapeHtml(raw) + ' <i>' + state + '</i>' +
+                        '<span class="ci-wsub"> · ≈ ' + escapeHtml(cooked) + ' готового</span>';
+                }
+                // Строку можно тапнуть, чтобы добавить её в дневной счёт (только если есть бюджет).
+                // raw/cooked уезжают в item — блок замены покажет граммовку порции.
+                function rowAttrs(r) {
+                    if (!addable) return ' class="con-item"';
+                    const raw = r.raw || r.w || '', cooked = r.cooked || '';
+                    return ' class="con-item con-row" role="button" tabindex="0" data-add-food' +
+                        ' data-name="' + escapeHtml(r.n) + '" data-kcal="' + r.kcal +
+                        '" data-p="' + r.p + '" data-f="' + r.f + '" data-c="' + r.c +
+                        '" data-raw="' + escapeHtml(raw) + '" data-cooked="' + escapeHtml(cooked) + '"';
+                }
+                // Одна карточка-строка: имя + ккал на первой строке (все строки одной
+                // высоты), вес — отдельной строкой во всю ширину (раньше вес, пометка
+                // и ккал стопкой теснились в узкой правой колонке — список был рваным).
+                function rowHtml(r, wline) {
+                    return '<div' + rowAttrs(r) + '><div class="ci-top">' +
+                        '<span class="ci-name">' + escapeHtml(r.n) + '</span>' +
+                        '<span class="ci-kcal">≈ ' + r.kcal + ' ккал' +
+                        (addable ? ' <span class="con-add" aria-hidden="true">＋</span>' : '') + '</span></div>' +
+                        '<div class="ci-w">' + wline + '</div></div>';
+                }
+
+                // Группы — свёрнутые шторки (одна простыня из 4 таблиц перегружала):
+                // открываешь только нужную.
+                // Продукты внутри группы — ПО АЛФАВИТУ (просьба владельца 09.07.2026):
+                // ищешь глазами, а не сканируешь весь список. Данные не трогаем —
+                // сортируем копию при рендере.
+                const byAbc = (a, b) => a.n.localeCompare(b.n, 'ru');
+                let groups = '';
+                con.groups.forEach(g => {
+                    let body = '';
+                    g.rows.slice().sort(byAbc).forEach(r => {
+                        body += rowHtml(r, weightLine(r.raw, r.cooked));
+                    });
+                    groups += '<details class="con-g"><summary class="con-group__h">' + escapeHtml(g.title) +
+                        '<span>' + escapeHtml(g.note) + '</span></summary>' +
+                        '<div class="con-list">' + body + '</div></details>';
+                });
+                // Вкусняшки — вес не меняется: одна порция строкой под именем.
+                let treatsHtml = '';
+                (treats ? treats.rows.slice().sort(byAbc) : []).forEach(r => {
+                    treatsHtml += rowHtml(r, escapeHtml(r.w));
+                });
+                // Вступление + легенда двойного веса — за раскрывашкой (просьба
+                // владельца 10.07.2026): по умолчанию сразу таблицы, ликбез по тапу.
+                const conQa = '<div class="qa-wrap">' + qaHtml('Как пользоваться заменами?',
+                    '<p><b>Зачем эти таблицы.</b> ' + escapeHtml(con.intro) + '</p>' +
+                    (addable
+                        ? '<p><b>Добавить к счёту дня.</b> Нажми на любую строку — её калории добавятся в счёт. Так удобно добирать разницу между планом (около 1200 ккал) и твоей личной нормой.</p>' +
+                          '<p><b>Заменить блюдо.</b> Открой блюдо в плане и нажми «Заменить»: можно взять готовый вариант или собрать свою замену по шагам — белок, гарнир, жир. У собранной замены будет своя кнопка «Рецепт».</p>'
+                        : '<p><b>Замена.</b> Любое блюдо плана можно заменить равной порцией из этих таблиц: одна строка ≈ одна порция плана.</p>') +
+                    '<p><b>Как понимать вес.</b> Крупная цифра — вес <b>сырого</b> продукта (мясо, рыба) или <b>сухой</b> крупы: столько нужно взвесить до готовки. Мелким серым рядом — сколько примерно получится в готовом виде.</p>' +
+                    '<p><b>Порции равноценные.</b> В таблице «Белки» каждая строка даёт ≈ 25–30 г белка, в «Сложных углеводах» ≈ 28–37 г углеводов, в «Полезных жирах» ≈ 10–12 г жиров. Поэтому меняй строку на строку из той же таблицы.</p>' +
+                    '<p><b>Готовь без жарки в масле</b> — вари, запекай или туши, тогда калории совпадут с таблицей.</p>') + '</div>';
+                // ⚠️ Внешний <details class="con"> обязан закрыться здесь же: без
+                // </details> он проглатывал следующие блоки секции («Что готовить
+                // завтра» был невидим, пока не раскроешь Конструктор).
+                // data-con-tables: шторок .con теперь две («Свой продукт» + таблицы) —
+                // кнопки «→ таблицы замен» (data-con-jump) целятся именно в таблицы.
+                return '<details class="con" data-con-tables><summary>Замены и вкусняшки</summary>' +
+                    conQa +
+                    groups +
+                    '<details class="con-g con-g--treat"><summary class="con-group__h">🔥 Вкусняшки<span>слот 20% · до 150–200 ккал</span></summary>' +
+                    '<p class="con__intro con__intro--treat">' + escapeHtml(treats ? treats.note : '') + '</p>' +
+                    '<div class="con-list">' + treatsHtml + '</div></details>' +
+                    '</details>';
+            }
+
+            // ─── Флоу завершения дня ───
+            function initFinishFlow() {
+                let mood = null;
+                const steps = {
+                    mood: sheet.querySelector('[data-step="mood"]'),
+                    done: sheet.querySelector('[data-step="done"]'),
+                };
+
+                function showStep(name) {
+                    Object.entries(steps).forEach(([k, el]) => el.hidden = (k !== name));
+                }
+                function openSheet() {
+                    // сводка привычек
+                    const total = d.habits.length, checked = KF.habitsChecked(N, total);
+                    sheet.querySelector('[data-habit-summary]').innerHTML =
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg>' +
+                        '<span>Задачи дня: <b>' + checked + ' из ' + total + '</b> отмечено</span>';
+                    // Сводка питания — только если участница вела счёт (что-то отмечено
+                    // или добрано); пустой счёт не показываем, чтобы не укорять.
+                    const ns = sheet.querySelector('[data-nutri-summary]');
+                    if (ns) {
+                        const used = nutri && nutri.t && (Object.keys(nutri.eaten).length || nutri.added.length);
+                        if (used) {
+                            const e = nutriEaten();
+                            const left = nutri.t.kcal - e.k;
+                            ns.innerHTML =
+                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v6.5a2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5V3"/><path d="M7.5 12v9"/><path d="M16.5 21V3"/><path d="M16.5 3c2 1 2 6 0 7.5"/></svg>' +
+                                '<span>Питание: ≈ <b>' + e.k + ' ккал</b>' +
+                                (left >= 0 ? ' — в бюджете' : ' — чуть выше бюджета') + '</span>';
+                        }
+                        ns.hidden = !used;
+                    }
+                    showStep('mood');
+                    sheet.classList.add('open');
+                    document.body.style.overflow = 'hidden';
+                }
+                function closeSheet() { sheet.classList.remove('open'); document.body.style.overflow = ''; }
+
+                document.querySelector('[data-open-finish]').addEventListener('click', openSheet);
+                sheet.querySelector('[data-sheet-close]').addEventListener('click', closeSheet);
+                sheet.addEventListener('click', (e) => { if (e.target === sheet) closeSheet(); });
+                document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet(); });
+
+                // Настроение выбрано → сразу засчитываем день (фото переехало в замеры).
+                sheet.querySelectorAll('.mood-opt').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (finishing) return;
+                        sheet.querySelectorAll('.mood-opt').forEach(b => b.classList.remove('sel'));
+                        btn.classList.add('sel');
+                        mood = btn.dataset.mood;
+                        setTimeout(finishDay, 220);
+                    });
+                });
+
+                const finishErr = sheet.querySelector('[data-finish-err]');
+                let finishing = false;
+                async function finishDay() {
+                    if (finishing) return;          // защита от двойного нажатия
+                    finishing = true;
+                    finishErr.hidden = true;
+                    const res = await KF.completeDay(N, { mood });
+                    if (!res || !res.ok) {
+                        finishing = false;
+                        finishErr.hidden = false;
+                        finishErr.textContent = (res && res.reason === 'auth')
+                            ? 'Не удалось сохранить — сессия входа истекла. Закрой окно, нажми «Выйти» и зайди заново по коду из письма.'
+                            : 'Не удалось сохранить день — проверь интернет и попробуй ещё раз.';
+                        return;
+                    }
+                    const next = N + 1;
+                    if (next > 28) {
+                        steps.done.querySelector('[data-done-title]').textContent = 'Программа пройдена! 🎉';
+                        steps.done.querySelector('[data-done-text]').textContent = 'Все 28 дней позади. Ты большая молодец!';
+                    } else if (next > KF.tierMaxDay()) {
+                        // Пробный доступ исчерпан (завершён последний доступный день) → стена.
+                        steps.done.querySelector('[data-done-title]').textContent = 'Пробные дни пройдены! 🎉';
+                        steps.done.querySelector('[data-done-text]').textContent = 'Ты попробовала программу. Дальше — все 28 дней с тренировками и питанием. Открой полный доступ, чтобы продолжить.';
+                    } else {
+                        // День next теперь открыт (progress_day сдвинулся) — берём его заголовок
+                        // с сервера. Таймаут как у загрузки дня (0.6.60): зависший запрос не должен
+                        // держать шторку на шаге настроения — день-то уже засчитан.
+                        const nd = await Promise.race([
+                            KF.getDay(next).catch(() => null),
+                            new Promise(res => setTimeout(() => res(null), 8000)),
+                        ]);
+                        const tail = nd ? (' — ' + nd.title) : '';
+                        steps.done.querySelector('[data-done-title]').textContent = 'День ' + N + ' завершён!';
+                        steps.done.querySelector('[data-done-text]').textContent = 'Открыт День ' + next + tail + '. Возвращайся завтра 💛';
+                    }
+                    showStep('done');
+                    cta.hidden = true;
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

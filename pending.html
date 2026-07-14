@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Безопасность: при переезде на GitHub Pages пропали HTTP-заголовки CF (свои там нельзя) -> максимум возвращаем мета-тегами + фрейм-бастером. Детали: docs/МИГРАЦИЯ-ХОСТИНГА.md §13.1 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://sxktnpupxcslzjrhisyw.supabase.co; connect-src 'self' https://sxktnpupxcslzjrhisyw.supabase.co wss://sxktnpupxcslzjrhisyw.supabase.co https://*.ingest.de.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <script src="js/frame-buster.js?v=0.6.73"></script>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1a1f1c">
+    <link rel="icon" href="favicon.svg?v=0.6.73" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=0.6.73">
+    <link rel="manifest" href="manifest.webmanifest?v=0.6.73">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KatyaFit">
+    <title>Доступ скоро · Личный кабинет KatyaFit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/tokens.css?v=0.6.73">
+    <link rel="stylesheet" href="css/cabinet.css?v=0.6.73">
+</head>
+<body>
+    <main class="auth-wrap">
+        <div class="auth-card">
+            <div class="brand">
+                <span class="brand__logo">Katya<b>Fit</b></span>
+            </div>
+            <div class="brand__sub">Личный кабинет</div>
+
+            <div class="pending-emo">⏳</div>
+            <h1 class="auth-title">Доступ скоро откроется</h1>
+            <p class="auth-sub">
+                Привет, <b data-user-name>!</b> Ты успешно вошла —
+                осталось дождаться, пока Катя откроет тебе программу. Обычно это
+                быстро. Как только доступ выдан, нажми «Проверить снова».
+            </p>
+
+            <button class="btn btn--gold btn--block" data-recheck>Проверить снова</button>
+            <a class="btn btn--ghost btn--block" href="https://t.me/kkatyafit" target="_blank" rel="noopener">Написать Кате</a>
+
+            <p class="auth-msg" data-msg hidden></p>
+
+            <p class="auth-note">
+                Вошла под другим адресом? <a href="#" data-logout>Выйти и сменить email</a>.
+            </p>
+        </div>
+    </main>
+
+    <script src="js/vendor/supabase.js?v=0.6.73"></script>
+    <script src="js/vendor/sentry.js?v=0.6.73"></script>
+    <script src="js/sentry-init.js?v=0.6.73"></script>
+    <script src="js/supabase.js?v=0.6.73"></script>
+    <script src="js/error-report.js?v=0.6.73"></script>
+    <script src="js/program-data.js?v=0.6.73"></script>
+    <script src="js/app.js?v=0.6.73"></script>
+    <script>
+        (async () => {
+            // Нет сессии → на вход. Есть доступ → сразу в кабинет.
+            const ok = await KF.boot();
+            if (!ok || !KF.auth) { window.location.replace('index.html'); return; }
+            if (KF.hasAccess) { window.location.replace('dashboard.html'); return; }
+
+            const nm = KF.name;
+            document.querySelectorAll('[data-user-name]').forEach(el => { el.textContent = nm + '!'; });
+
+            const msg = document.querySelector('[data-msg]');
+            const recheck = document.querySelector('[data-recheck]');
+
+            // Перепроверка: заново поднять профиль из БД. Доступ выдан → в кабинет.
+            recheck.addEventListener('click', async () => {
+                recheck.disabled = true; recheck.textContent = 'Проверяем…';
+                msg.hidden = true;
+                await KF.boot();
+                if (KF.hasAccess) { window.location.replace('dashboard.html'); return; }
+                recheck.disabled = false; recheck.textContent = 'Проверить снова';
+                msg.hidden = false;
+                msg.textContent = 'Доступ пока не открыт. Напиши Кате — она включит его, и кнопка пустит тебя внутрь.';
+            });
+
+            document.querySelector('[data-logout]').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await KF.logout();
+                window.location.href = 'index.html';
+            });
+        })();
+    </script>
+</body>
+</html>

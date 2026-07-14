@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Безопасность: при переезде на GitHub Pages пропали HTTP-заголовки CF (свои там нельзя) -> максимум возвращаем мета-тегами + фрейм-бастером. Детали: docs/МИГРАЦИЯ-ХОСТИНГА.md §13.1 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://sxktnpupxcslzjrhisyw.supabase.co; connect-src 'self' https://sxktnpupxcslzjrhisyw.supabase.co wss://sxktnpupxcslzjrhisyw.supabase.co https://*.ingest.de.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <script src="js/frame-buster.js?v=0.6.73"></script>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1a1f1c">
+    <link rel="icon" href="favicon.svg?v=0.6.73" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=0.6.73">
+    <link rel="manifest" href="manifest.webmanifest?v=0.6.73">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KatyaFit">
+    <title>Моя программа · Личный кабинет KatyaFit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/tokens.css?v=0.6.73">
+    <link rel="stylesheet" href="css/cabinet.css?v=0.6.73">
+</head>
+<body>
+    <header class="topbar">
+        <div class="container topbar__inner">
+            <a class="brand" href="dashboard.html">
+                <span class="brand__logo">Katya<b>Fit</b></span>
+                <span class="brand__sub">Кабинет</span>
+            </a>
+            <div class="topbar__user">
+                <span class="avatar" data-user-avatar>К</span>
+                <span class="is-skel" data-user-name></span>
+                <a href="#" class="topbar__logout" data-logout>Выйти</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="dash">
+        <div class="container">
+            <section class="dash-hero">
+                <div class="dash-hero__greet">
+                    <h1>Привет, <span class="accent is-skel" data-user-name></span>!</h1>
+                    <p>Программа домашнего похудения · 4 недели</p>
+                </div>
+                <div class="progress-block">
+                    <div class="progress-meta">
+                        <span>Прогресс программы</span>
+                        <span><b data-progress-done>0</b> из 28 дней</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-bar__fill" data-progress-fill style="width:0%"></div></div>
+                    <div class="progress-stats">
+                        <div class="stat"><b data-stat-done>0</b>дней пройдено</div>
+                        <div class="stat"><b data-stat-workouts>0/12</b>тренировок</div>
+                    </div>
+                </div>
+            </section>
+
+            <div data-tier-slot></div>
+            <div data-measure-slot></div>
+            <div data-continue-slot><div class="skel-block skel-today" aria-hidden="true"></div></div>
+
+            <div class="section-head">
+                <h2>Календарь программы</h2>
+                <span class="hint">Новый день открывается, когда завершишь текущий</span>
+            </div>
+            <div data-weeks><div class="skel-block skel-cal" aria-hidden="true"></div></div>
+
+            <footer class="dash-foot">
+                <div data-pwa-slot></div>
+                <div data-measure-bottom></div>
+                <!-- Вопрос по программе → личный Telegram Кати (тот же адрес, что и апгрейд тарифа) -->
+                <a class="report-link" href="https://t.me/kkatyafit" target="_blank" rel="noopener">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21.5 3.5 2.8 10.7c-.9.35-.85 1.6.05 1.9l4.7 1.5 1.8 5.6c.3.85 1.4.95 1.85.2l2.4-3.9 4.9 3.6c.7.5 1.7.1 1.85-.75L22.9 4.6c.15-.85-.7-1.5-1.4-1.1z"/><path d="M7.55 14.1 19.5 6"/>
+                    </svg>
+                    Вопрос по программе? Написать Кате
+                </a>
+                <button type="button" class="report-link" data-report-open>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 9v4"/><path d="M12 17h.01"/>
+                        <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+                    </svg>
+                    Что-то не работает? Сообщить
+                </button>
+            </footer>
+        </div>
+    </main>
+
+    <!-- Окно «продолжить / начать заново» -->
+    <div class="sheet-overlay" data-resume>
+        <div class="sheet resume-card" role="dialog" aria-modal="true" aria-labelledby="resume-title">
+            <div class="sheet__grab"></div>
+            <div class="emo">👋</div>
+            <h2 id="resume-title">С возвращением!</h2>
+            <p data-resume-text>Тебя не было несколько дней.</p>
+            <button class="btn btn--gold btn--block" data-resume-continue>Продолжить</button>
+            <button class="btn btn--ghost btn--block" data-resume-restart>Начать программу заново</button>
+        </div>
+    </div>
+
+    <!-- Шторка замеров (старт / финал) -->
+    <div class="sheet-overlay" data-measure-sheet>
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="measure-title">
+            <div class="sheet__grab"></div>
+            <button class="sheet__close" data-measure-close aria-label="Закрыть">✕</button>
+            <h2 id="measure-title" data-measure-title>Замеры до старта</h2>
+            <p class="sheet-sub" data-measure-sub>Заполни что знаешь — все поля по желанию. Через 28 дней сравним с этими цифрами.</p>
+            <form data-measure-form novalidate>
+                <p class="sheet-err" data-measure-err hidden></p>
+                <div class="measure-grid"></div>
+                <div class="activity-pick" data-activity-pick hidden></div>
+                <label class="photo-drop" data-measure-photo>
+                    <input type="file" accept="image/*" hidden data-measure-photo-input>
+                    <span class="ph-ic">📷</span>
+                    <span class="ph-hint" data-measure-photo-hint>Фото на память — по желанию</span>
+                    <span class="ph-note">Из галереи или с камеры. Если камера чёрная — выбери готовое фото или включи доступ к камере в настройках телефона.</span>
+                    <span class="ph-change">Заменить фото</span>
+                </label>
+                <label class="consent-check" data-consent-block hidden>
+                    <input type="checkbox" data-consent-input>
+                    <span>Даю согласие на обработку персональных данных (в т.ч. возраст, рост, вес, фото)
+                        согласно <a href="privacy.html" target="_blank" rel="noopener">Политике конфиденциальности</a>
+                        и принимаю условия <a href="oferta.html" target="_blank" rel="noopener">оферты</a>.</span>
+                </label>
+                <div class="sheet-actions">
+                    <button type="submit" class="btn btn--gold btn--block">Сохранить замеры</button>
+                    <button type="button" class="sheet-skip" data-measure-skip>Позже</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Шторка «Сообщить о проблеме» -->
+    <div class="sheet-overlay" data-report-sheet>
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="report-title">
+            <div class="sheet__grab"></div>
+            <button class="sheet__close" data-report-close aria-label="Закрыть">✕</button>
+            <div data-report-intro>
+                <h2 id="report-title">Что-то не так?</h2>
+                <p class="sheet-sub">Опиши, что не работает или выглядит странно — Катя увидит и починим. Спасибо, что помогаешь!</p>
+            </div>
+            <form data-report-form novalidate>
+                <textarea class="report-text" data-report-text rows="4" maxlength="800"
+                          placeholder="Например: не сохраняются замеры / не открывается день / кнопка не нажимается…"></textarea>
+                <div class="sheet-actions">
+                    <button type="submit" class="btn btn--gold btn--block">Отправить</button>
+                    <button type="button" class="sheet-skip" data-report-close>Отмена</button>
+                </div>
+            </form>
+            <div class="sheet-done" data-report-done hidden>
+                <div class="emo">🙌</div>
+                <h2>Спасибо!</h2>
+                <p>Сообщение ушло. Мы посмотрим и исправим.</p>
+                <button type="button" class="btn btn--gold btn--block" data-report-close>Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/vendor/supabase.js?v=0.6.73"></script>
+    <script src="js/vendor/sentry.js?v=0.6.73"></script>
+    <script src="js/sentry-init.js?v=0.6.73"></script>
+    <script src="js/supabase.js?v=0.6.73"></script>
+    <script src="js/error-report.js?v=0.6.73"></script>
+    <script src="js/program-data.js?v=0.6.73"></script>
+    <script src="js/nutrition-data.js?v=0.6.73"></script>
+    <script src="js/app.js?v=0.6.73"></script>
+    <script>
+        (async () => {
+            if (!(await requireAuth())) return;
+            initTopbar();
+
+            // Экранируем и кавычки: escapeHtml используется в т.ч. в атрибутах (value="…").
+            function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+            // Баннер тарифа: мягкая допродажа для пробного/«питания». Полный — без баннера.
+            function renderTier() {
+                const slot = document.querySelector('[data-tier-slot]');
+                if (!slot) return;
+                let html = '';
+                if (KF.tier === 'trial' && !KF.atTrialWall()) {
+                    html = '<div class="tier-note">' +
+                        '<span>🎁 <b>Пробный доступ</b> — открыты первые дни программы.</span>' +
+                        '<a href="' + KF_UPGRADE_URL + '" target="_blank" rel="noopener">Открыть всю программу →</a></div>';
+                } else if (KF.tier === 'nutrition') {
+                    html = '<div class="tier-note">' +
+                        '<span>🥗 Тариф <b>«Питание»</b> — тренировки доступны в полном.</span>' +
+                        '<a href="' + KF_UPGRADE_URL + '" target="_blank" rel="noopener">Добавить тренировки →</a></div>';
+                }
+                slot.innerHTML = html;
+            }
+
+            async function renderContinue() {
+                const slot = document.querySelector('[data-continue-slot]');
+                if (KF.isFinished()) {
+                    // Финал — не тупик: «что дальше» (поддерживающий рацион) + отзыв Кате.
+                    // Норма поддержания = TDEE из анкеты (без дефицита −18%).
+                    const t = KF.nutritionTargets();
+                    const maint = t ? Math.round(t.tdee / 10) * 10 : null;
+                    const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+                    slot.innerHTML =
+                        '<div class="finish-banner"><div class="emo">🎉</div>' +
+                        '<h2>Программа пройдена!</h2>' +
+                        '<p>Все 28 дней позади. Ты большая молодец — так держать!</p></div>' +
+                        '<div class="finish-next">' +
+                            '<h3>Что дальше — как удержать результат</h3>' +
+                            '<ul>' +
+                                '<li>' + CHECK + '<span>Переходи на <b>поддерживающий рацион</b>: питайся так же, как в программе, но уже без снижения калорий' +
+                                    (maint ? ' — твоя норма теперь ≈ <b>' + maint + ' ккал</b> в день' : '') + '.</span></li>' +
+                                '<li>' + CHECK + '<span>Белок в каждом приёме пищи и одна вкусняшка в день (те самые 20%) остаются — это и есть жизнь после программы.</span></li>' +
+                                '<li>' + CHECK + '<span>Привычки не бросаем: вода, шаги, сон до 23:00 — они держат результат лучше любой диеты.</span></li>' +
+                                '<li>' + CHECK + '<span>Взвешивайся раз в неделю. Вернулись +1–2 кг? Просто возвращаешься к плану на неделю-другую.</span></li>' +
+                            '</ul>' +
+                            '<a class="btn btn--gold btn--block" href="' + KF_KATYA_TG + '" target="_blank" rel="noopener">Поделиться результатом с Катей</a>' +
+                            '<p class="finish-next__sub">Напиши, как прошли твои 4 недели — твой отзыв поможет другим девушкам решиться 💛</p>' +
+                        '</div>';
+                    return;
+                }
+                // Пробный пройден до конца → «стена» с предложением открыть полный доступ.
+                if (KF.atTrialWall()) {
+                    slot.innerHTML =
+                        '<div class="upsell-card"><div class="emo">🚀</div>' +
+                        '<h2>Пробные дни пройдены!</h2>' +
+                        '<p>Ты попробовала программу. Дальше — все 28 дней с тренировками и питанием.</p>' +
+                        '<a class="btn btn--gold btn--block" href="' + KF_UPGRADE_URL + '" target="_blank" rel="noopener">Открыть полный доступ</a></div>';
+                    return;
+                }
+                const n = KF.activeDay();
+                // Активный день всегда открыт (n <= progress_day) — контент берём с
+                // сервера, но с таймаутом: зависший запрос (флаки-сеть до Supabase)
+                // не должен оставлять карточку скелетоном. Фолбэк рисует «День N»
+                // из локальной программы — настоящий замок всё равно на странице дня.
+                const d = await Promise.race([
+                    KF.getDay(n).catch(() => null),
+                    new Promise(res => setTimeout(() => res(null), 8000)),
+                ]);
+                const meta = TYPE_META[(d && d.type) || PROGRAM[n - 1].type];
+                const title = (d && d.title) || ('День ' + n);
+                const metaText = (d && d.type === 'workout' && d.workout) ? (meta.tag + ' · ' + escapeHtml(d.workout.dur)) : meta.tag;
+                // Ничего ещё не пройдено → «Начинаем», иначе «Продолжаем».
+                const fresh = KF.completedCount() === 0;
+                slot.innerHTML =
+                    '<a class="today-card" href="day.html?day=' + n + '">' +
+                        '<div><div class="today-card__label">' + (fresh ? 'Начинаем' : 'Продолжаем') + '</div>' +
+                        '<div class="today-card__title">День ' + n + ' · ' + escapeHtml(title) + '</div>' +
+                        '<div class="today-card__meta">' + metaText + '</div></div>' +
+                        '<span class="btn btn--gold">' + (fresh ? 'Начать день →' : 'Открыть день →') + '</span>' +
+                    '</a>';
+            }
+
+            function renderProgress() {
+                const done = KF.completedCount();
+                document.querySelector('[data-progress-done]').textContent = done;
+                document.querySelector('[data-progress-fill]').style.width = (done / 28 * 100) + '%';
+                document.querySelector('[data-stat-done]').textContent = done;
+                document.querySelector('[data-stat-workouts]').textContent = KF.workoutsCompleted() + '/12';
+            }
+
+            function renderWeeks() {
+                const host = document.querySelector('[data-weeks]');
+                const activeWeek = Math.ceil(KF.activeDay() / 7);
+                const typeCount = (w, t) => PROGRAM.filter(d => d.week === w && d.type === t).length;
+
+                const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+                const ICON_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="10.5" width="13" height="9" rx="2"/><path d="M8.2 10.5V8a3.8 3.8 0 0 1 7.6 0v2.5"/></svg>';
+                const ICON_CART = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h2l2.3 11.7a1.5 1.5 0 0 0 1.5 1.2h8.7a1.5 1.5 0 0 0 1.5-1.2L21 8.5H6"/><circle cx="9.5" cy="20.3" r="1.2"/><circle cx="17.3" cy="20.3" r="1.2"/></svg>';
+
+                // Список покупок недели: агрегат меню из nutrition-data.js. Показываем,
+                // только если тариф открывает неделю целиком (список раскрывает её меню),
+                // — триал (дни 1–3) недельный список не видит, как и план питания дней 4+.
+                function shoppingHtml(w) {
+                    if (typeof nutritionShopping !== 'function' || KF.tierMaxDay() < w * 7) return '';
+                    const s = nutritionShopping(w);
+                    if (!s) return '';
+                    // «Скопировать» — СВЕРХУ (просьба владельца): список длинный, кнопка
+                    // в конце не находилась. Иконка + span-лейбл (фидбек меняет только span).
+                    // Обучающий текст — за раскрывашкой «?» (просьба владельца 10.07.2026).
+                    let body = '<details class="qa"><summary class="qa__q"><span class="qa__ic" aria-hidden="true">?</span>Как пользоваться списком?</summary>' +
+                        '<div class="qa__body">' +
+                        '<p><b>Это все продукты на неделю вперёд</b> — всё меню недели сложено в один список. Один поход в магазин, и неделя закрыта.</p>' +
+                        '<p><b>Два вида списка.</b> Кнопки «По категориям» и «По дням» переключают вид. «По категориям» — привычный список для магазина: продукты всей недели сложены по отделам, с общим весом. «По дням» — те же продукты, но разложенные по дням недели, с весом на каждый приём. Названия блюд намеренно скрыты: что именно приготовишь, узнаешь уже на странице дня — маленькая интрига, чтобы было интереснее.</p>' +
+                        '<p><b>Не любишь какой-то продукт?</b> Открой вид «По дням» — видно, в какой день и в какой приём (завтрак, обед или ужин) идёт каждый продукт. Например, не ешь рыбу во вторник на ужин — понятно, какой приём это касается: открой этот день, нажми «Заменить» у нужного приёма, а продукт просто не покупай.</p>' +
+                        '<p><b>Вес — как в плане:</b> мясо и рыба посчитаны сырыми, крупы — сухими. Бери с небольшим запасом — часть уйдёт при чистке и готовке.</p>' +
+                        '<p><b>Отмечай купленное</b> (в виде «По категориям»). Нажми на строку — она вычеркнется, отметка сохранится в телефоне. Вверху появится счётчик «N из M», внизу — кнопка «Сбросить отметки» к следующей закупке.</p>' +
+                        '<p><b>Кнопка «Скопировать список»</b> копирует ещё не купленные продукты — можно вставить их в сообщение или в заметки телефона.</p>' +
+                        '<p><b>Чего в списке нет:</b> свободных приёмов (читмилов) и вкусняшек из таблиц замен — их докупай по желанию.</p>' +
+                        '</div></details>' +
+                        '<button type="button" class="shop__copy" data-shop-copy>' +
+                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
+                        '<span>Скопировать список</span></button>';
+                    // Два вида списка (11.07.2026): «По категориям» — привычный агрегат
+                    // по отделам магазина с отметками «куплено»; «По дням» — те же
+                    // продукты по дням недели, но БЕЗ названий блюд (интрига: что за
+                    // блюдо получится — сюрприз до страницы дня; просьба владельца
+                    // 11.07.2026 — «нужна интрига, блюда должны быть неизвестны»).
+                    body += '<div class="shop-view">' +
+                        '<button type="button" class="shop-view__btn" data-shop-view="cat">По категориям</button>' +
+                        '<button type="button" class="shop-view__btn" data-shop-view="days">По дням</button></div>';
+                    body += '<div data-shop-cat>';
+                    s.groups.forEach(g => {
+                        body += '<div class="shop-group"><div class="shop-group__h">' + escapeHtml(g.t) + '</div><ul class="shop-items">' +
+                            g.items.map(it =>
+                                '<li><label class="shop-it"><input type="checkbox" data-shop-item="' + escapeHtml(it[0]) + '">' +
+                                '<span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 7.5"/></svg></span>' +
+                                '<span class="n">' + escapeHtml(it[0]) + '</span><span class="q">' + escapeHtml(it[1]) + '</span></label></li>'
+                            ).join('') + '</ul></div>';
+                    });
+                    if (s.note) body += '<p class="shop__note">' + escapeHtml(s.note) + '</p>';
+                    body += '<button type="button" class="shop__reset" data-shop-reset hidden>Сбросить отметки</button></div>';
+                    body += '<div data-shop-days hidden>' + shoppingByDayHtml(w) + '</div>';
+                    return '<summary><span class="ic">' + ICON_CART + '</span>Список покупок на неделю' +
+                        '<span class="shop__cnt" data-shop-cnt hidden></span></summary>' +
+                        '<div class="shop__body">' + body + '</div>';
+                }
+
+                // Вид «по дням»: день недели → приёмы (завтрак/обед/ужин) → продукты
+                // с весом, БЕЗ названий блюд (интрига — просьба владельца 11.07.2026:
+                // продукты видны, а какое блюдо получится — сюрприз до страницы дня).
+                // Продукты берутся РОВНО из текста приёма (nutritionShoppingByDay в
+                // nutrition-data.js) — граммовки совпадают с рецептом по построению.
+                function shoppingByDayHtml(w) {
+                    if (typeof nutritionShoppingByDay !== 'function') return '';
+                    const DOW = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+                    // Интрига (11.07.2026): из строки-продукта убираем СПОСОБ приготовления
+                    // («запечённое/отварная/тушёное/на пару/гриль…») — остаётся сырой
+                    // продукт + вес: «Куриное филе (170 г сырой)», а не «…запечённое».
+                    // Вес и сам продукт не трогаем (для магазина так даже правильнее);
+                    // рецепт на странице дня остаётся полным (там nutritionMealParts как есть).
+                    const COOK = ['запечённые', 'запечённых', 'запечённое', 'запечённая', 'запечённый',
+                        'отварные', 'отварных', 'отварное', 'отварная', 'отварной',
+                        'варёные', 'варёных', 'варёное', 'варёная', 'варёный',
+                        'тушёные', 'тушёных', 'тушёное', 'тушёная', 'тушёный',
+                        'обжаренные', 'обжаренное', 'жареные', 'жареное', 'жареная',
+                        'приготовленные', 'приготовленное', 'паровые', 'паровое',
+                        'гриль', 'на пару', 'на гриле без масла', 'в специях'];
+                    function hideRecipe(s) {
+                        let out = s;
+                        COOK.forEach(function (wd) {
+                            const re = new RegExp('(^|\\s)' + wd.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '(?=\\s|\\(|,|;|$)', 'gi');
+                            out = out.replace(re, '$1');
+                        });
+                        out = out.replace(/\s{2,}/g, ' ').replace(/\s+\(/g, ' (').trim();
+                        return out ? out.charAt(0).toUpperCase() + out.slice(1) : out;
+                    }
+                    // Имя дня недели крупно шрифтом бренда + бейдж «День N» справа,
+                    // у каждого приёма — цветной бейдж слота (Обед/Ужин/…). Название
+                    // блюда (m.name) НЕ выводим — только слот и его продукты с весом.
+                    let html = '';
+                    nutritionShoppingByDay(w).forEach((d, i) => {
+                        let meals = '';
+                        d.meals.forEach(m => {
+                            const slot = '<span class="shop-meal__slot">' + escapeHtml(m.slot) + '</span>';
+                            if (m.cheat) {
+                                // Читмил — блюда и так нет (свободный ужин), продукты по желанию.
+                                meals += '<div class="shop-meal shop-meal--free"><div class="shop-meal__h">' + slot +
+                                    '<i>свободный приём — по желанию</i></div></div>';
+                                return;
+                            }
+                            meals += '<div class="shop-meal"><div class="shop-meal__h">' + slot +
+                                (m.treat ? '<i>слот 20%</i>' : '') + '</div><ul class="shop-meal__list">' +
+                                m.parts.map(p => '<li>' + escapeHtml(hideRecipe(p)) + '</li>').join('') + '</ul></div>';
+                        });
+                        html += '<div class="shop-day"><div class="shop-day__h">' +
+                            '<span class="shop-day__dow">' + DOW[i] + '</span>' +
+                            '<span class="shop-day__num">День ' + d.day + '</span></div>' + meals + '</div>';
+                    });
+                    return html + '<p class="shop__note">Продукты разложены по дням недели — видно, что покупать и готовить в какой день. А какое именно блюдо получится — узнаешь уже на странице дня: пусть будет маленькая интрига. Не ешь какой-то продукт? Видно, в какой день и приём он идёт — открой этот день и нажми «Заменить». Отметки «куплено» — в виде «По категориям».</p>';
+                }
+
+                // Отметки «куплено»: живут в localStorage по неделе (ключ — название
+                // продукта, чтобы отметки пережили правки порядка строк меню).
+                function wireShopping(shop, w) {
+                    const LS = 'kf_shop_w' + w;
+                    let bought = [];
+                    try { bought = JSON.parse(localStorage.getItem(LS) || '[]'); } catch (e) { bought = []; }
+                    if (!Array.isArray(bought)) bought = [];
+                    const boxes = Array.prototype.slice.call(shop.querySelectorAll('[data-shop-item]'));
+                    const cnt = shop.querySelector('[data-shop-cnt]');
+                    const reset = shop.querySelector('[data-shop-reset]');
+                    function paint() {
+                        let done = 0;
+                        boxes.forEach(cb => {
+                            const on = bought.indexOf(cb.dataset.shopItem) !== -1;
+                            cb.checked = on;
+                            cb.closest('li').classList.toggle('is-bought', on);
+                            if (on) done++;
+                        });
+                        if (cnt) { cnt.textContent = done + ' из ' + boxes.length; cnt.hidden = !done; }
+                        if (reset) reset.hidden = !done;
+                    }
+                    shop.addEventListener('change', (ev) => {
+                        const cb = ev.target.closest('[data-shop-item]');
+                        if (!cb) return;
+                        const name = cb.dataset.shopItem;
+                        bought = bought.filter(x => x !== name);
+                        if (cb.checked) bought.push(name);
+                        try { localStorage.setItem(LS, JSON.stringify(bought)); } catch (e) { /* приватный режим — отметки не переживут перезагрузку */ }
+                        paint();
+                    });
+                    if (reset) reset.addEventListener('click', () => {
+                        bought = [];
+                        try { localStorage.removeItem(LS); } catch (e) {}
+                        paint();
+                    });
+                    // «Скопировать список» — отправить мужу/себе в заметки. Копируем
+                    // только НЕ купленное (вычеркнутое уже в корзине); всё куплено — так и говорим.
+                    const copyBtn = shop.querySelector('[data-shop-copy]');
+                    if (copyBtn) copyBtn.addEventListener('click', async () => {
+                        const lines = ['Список покупок — неделя ' + w + ' (KatyaFit)'];
+                        shop.querySelectorAll('.shop-group').forEach(g => {
+                            const items = [];
+                            g.querySelectorAll('li').forEach(li => {
+                                if (li.classList.contains('is-bought')) return;
+                                items.push('• ' + li.querySelector('.n').textContent + ' — ' + li.querySelector('.q').textContent);
+                            });
+                            if (items.length) lines.push('', g.querySelector('.shop-group__h').textContent + ':', items.join('\n'));
+                        });
+                        const lbl = copyBtn.querySelector('span') || copyBtn;
+                        const flash = (txt) => {
+                            lbl.textContent = txt;
+                            setTimeout(() => { lbl.textContent = 'Скопировать список'; }, 2000);
+                        };
+                        if (lines.length === 1) { flash('Всё уже куплено 🎉'); return; }
+                        const text = lines.join('\n');
+                        let ok = false;
+                        try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {
+                            // Старый браузер/без разрешения — фолбэк через скрытый textarea.
+                            const ta = document.createElement('textarea');
+                            ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+                            document.body.appendChild(ta); ta.select();
+                            try { ok = document.execCommand('copy'); } catch (e2) {}
+                            ta.remove();
+                        }
+                        flash(ok ? 'Скопировано ✓' : 'Не получилось скопировать');
+                    });
+                    // Переключатель «По категориям / По дням». Выбор общий для всех
+                    // недель и переживает перезагрузку (kf_shop_view); «Скопировать»
+                    // прячем в виде «по дням» — она копирует категории.
+                    const viewBtns = Array.prototype.slice.call(shop.querySelectorAll('[data-shop-view]'));
+                    const catBox = shop.querySelector('[data-shop-cat]');
+                    const daysBox = shop.querySelector('[data-shop-days]');
+                    let view = 'cat';
+                    try { if (localStorage.getItem('kf_shop_view') === 'days') view = 'days'; } catch (e) {}
+                    function paintView() {
+                        viewBtns.forEach(b => b.classList.toggle('is-active', b.dataset.shopView === view));
+                        if (catBox) catBox.hidden = view !== 'cat';
+                        if (daysBox) daysBox.hidden = view !== 'days';
+                        if (copyBtn) copyBtn.hidden = view !== 'cat';
+                    }
+                    viewBtns.forEach(b => b.addEventListener('click', () => {
+                        view = b.dataset.shopView;
+                        try { localStorage.setItem('kf_shop_view', view); } catch (e) {}
+                        paintView();
+                    }));
+                    paintView();
+                    paint();
+                }
+
+                const tabs = document.createElement('div');
+                tabs.className = 'cal-tabs';
+                const track = document.createElement('div');
+                track.className = 'cal-track';
+
+                for (let w = 1; w <= 4; w++) {
+                    const weekDays = PROGRAM.filter(d => d.week === w);
+                    const doneInWeek = weekDays.filter(d => KF.isCompleted(d.n)).length;
+                    const weekDone = doneInWeek === weekDays.length;
+
+                    const tab = document.createElement('button');
+                    tab.className = 'cal-tab' + (w === activeWeek ? ' is-active' : '') + (weekDone ? ' is-done' : '');
+                    tab.dataset.week = w;
+                    tab.innerHTML = 'Неделя ' + w +
+                        '<span class="cal-tab__count">' + (weekDone ? ICON_CHECK : doneInWeek + '/' + weekDays.length) + '</span>';
+                    tabs.appendChild(tab);
+
+                    const slide = document.createElement('section');
+                    slide.className = 'cal-week';
+                    slide.dataset.week = w;
+                    slide.innerHTML =
+                        '<div class="cal-week__head">' +
+                            '<div class="cal-week__title">Неделя ' + w + '</div>' +
+                            '<div class="cal-week__progress">' + doneInWeek + ' / ' + weekDays.length + ' дней</div>' +
+                        '</div>' +
+                        '<div class="cal-week__sub">' +
+                            typeCount(w, 'workout') + ' трен. · ' + typeCount(w, 'recovery') + ' восст. · ' + typeCount(w, 'rest') + ' отдых' +
+                        '</div>';
+                    const grid = document.createElement('div');
+                    grid.className = 'days-grid';
+                    weekDays.forEach(d => {
+                        const st = dayState(d.n);
+                        const m = TYPE_META[d.type];
+                        const cell = document.createElement(st === 'locked' ? 'div' : 'a');
+                        cell.className = 'day-cell day-cell--' + st;
+                        if (st !== 'locked') cell.href = 'day.html?day=' + d.n;
+                        cell.setAttribute('aria-label', 'День ' + d.n + ' — ' + (st === 'done' ? 'пройден' : st === 'today' ? 'текущий' : 'закрыт'));
+                        cell.innerHTML =
+                            (st === 'done' ? '<span class="badge-ic">' + ICON_CHECK + '</span>' : '') +
+                            (st === 'locked' ? '<span class="badge-ic">' + ICON_LOCK + '</span>' : '') +
+                            '<span class="day-cell__num">' + d.n + '</span>' +
+                            '<span class="day-cell__icon day-cell__icon--' + d.type + '">' + m.icon + '</span>' +
+                            '<span class="day-cell__tag">' + (m.short || m.tag) + '</span>';
+                        grid.appendChild(cell);
+                    });
+                    slide.appendChild(grid);
+                    // Список покупок недели дорисовывается АСИНХРОННО ниже (данные
+                    // питания под серверным замком): сетка дней не ждёт сеть.
+                    track.appendChild(slide);
+                }
+
+                host.innerHTML = '';
+                host.appendChild(tabs);
+                host.appendChild(track);
+
+                // Списки покупок требуют данных питания (сервер, тарифный замок,
+                // ?v=0.6.73). Грузим ПОСЛЕ отрисовки календаря — сеть не держит
+                // сетку (урок 0.6.60) — и наполняем шторки недель. Сбой/таймаут
+                // загрузки → списки просто не появятся (мягкая деградация).
+                KF.loadNutrition({ days: 'all', reference: true }).then(() => {
+                    for (let w = 1; w <= 4; w++) {
+                        const slide = track.querySelector('.cal-week[data-week="' + w + '"]');
+                        if (!slide || slide.querySelector('.shop')) continue;
+                        const shopHtml = shoppingHtml(w);
+                        if (!shopHtml) continue;
+                        const shop = document.createElement('details');
+                        shop.className = 'shop';
+                        shop.innerHTML = shopHtml;
+                        wireShopping(shop, w);
+                        slide.appendChild(shop);
+                    }
+                });
+
+                const slides = Array.from(track.children);
+                const tabEls = Array.from(tabs.children);
+                const setActive = (w) => tabEls.forEach(t => t.classList.toggle('is-active', +t.dataset.week === w));
+
+                function focusWeek(w, smooth) {
+                    const slide = slides[w - 1];
+                    if (!slide) return;
+                    const left = slide.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft;
+                    track.scrollTo({ left, behavior: smooth ? 'smooth' : 'auto' });
+                    setActive(w);
+                }
+
+                tabEls.forEach(t => t.addEventListener('click', () => focusWeek(+t.dataset.week, true)));
+
+                // Синхронизация активного таба при свайпе карусели
+                let scrollTimer;
+                track.addEventListener('scroll', () => {
+                    clearTimeout(scrollTimer);
+                    scrollTimer = setTimeout(() => {
+                        const trackLeft = track.getBoundingClientRect().left;
+                        let best = 0, bestDist = Infinity;
+                        slides.forEach((s, i) => {
+                            const dist = Math.abs(s.getBoundingClientRect().left - trackLeft);
+                            if (dist < bestDist) { bestDist = dist; best = i; }
+                        });
+                        setActive(best + 1);
+                    }, 90);
+                });
+
+                // Авто-фокус текущей недели при входе. Ждём полной загрузки:
+                // на раннем кадре scroll-snap сбрасывает прокрутку к началу.
+                const focusActive = () => focusWeek(activeWeek, false);
+                if (document.readyState === 'complete') requestAnimationFrame(focusActive);
+                else window.addEventListener('load', () => requestAnimationFrame(focusActive));
+            }
+
+            // ─── Окно «продолжить / заново» ───
+            function maybeOfferResume() {
+                if (!KF.shouldOfferResume()) return;
+                const overlay = document.querySelector('[data-resume]');
+                const n = KF.activeDay();
+                overlay.querySelector('[data-resume-text]').innerHTML =
+                    'Тебя не было <b>' + KF._sessionGap + ' дн.</b> Хочешь продолжить с <b>Дня ' + n + '</b> или начать программу заново?';
+                overlay.querySelector('[data-resume-continue]').textContent = 'Продолжить с Дня ' + n;
+                overlay.classList.add('open');
+                overlay.querySelector('[data-resume-continue]').addEventListener('click', () => {
+                    KF.touch(); overlay.classList.remove('open');
+                });
+                const restartBtn = overlay.querySelector('[data-resume-restart]');
+                restartBtn.addEventListener('click', async () => {
+                    if (!confirm('Начать программу заново? Весь прогресс сбросится с Дня 1.')) return;
+                    restartBtn.disabled = true; restartBtn.textContent = 'Сбрасываем…';
+                    const r = await KF.reset();
+                    if (r && r.ok) { location.reload(); return; }
+                    // Сбой сети/сессии: без проверки страница просто перезагрузилась бы,
+                    // прогресс остался — а участница решила бы, что «заново» началось.
+                    restartBtn.disabled = false; restartBtn.textContent = 'Начать программу заново';
+                    alert(r && r.reason === 'auth'
+                        ? 'Сессия входа истекла. Нажми «Выйти» и зайди заново по коду из письма.'
+                        : 'Не получилось сбросить прогресс — проверь интернет и попробуй ещё раз.');
+                });
+            }
+
+            // ─── Замеры (старт и финал) ───
+            function initMeasure() {
+                const slot = document.querySelector('[data-measure-slot]');
+                const slotBottom = document.querySelector('[data-measure-bottom]');
+                const sheet = document.querySelector('[data-measure-sheet]');
+                if (!slot || !sheet) return;
+                const form = sheet.querySelector('[data-measure-form]');
+                const grid = sheet.querySelector('.measure-grid');
+                const activityPick = sheet.querySelector('[data-activity-pick]');
+                const photoDrop = sheet.querySelector('[data-measure-photo]');
+                const photoInput = sheet.querySelector('[data-measure-photo-input]');
+                const photoHint = sheet.querySelector('[data-measure-photo-hint]');
+                const consentBlock = sheet.querySelector('[data-consent-block]');
+                const consentInput = sheet.querySelector('[data-consent-input]');
+                let currentPhase = 'start';
+                let photoBlob = null;       // новое сжатое фото к заливке (null = оставить прежнее)
+                let previewObjUrl = null;   // временный object-URL превью — освобождаем, чтобы не текла память
+                function releasePreviewUrl() { if (previewObjUrl) { URL.revokeObjectURL(previewObjUrl); previewObjUrl = null; } }
+
+                const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="2" transform="rotate(-45 12 12)"/><path d="M9.5 6.5l1.4 1.4M12 9l1.4 1.4M14.5 11.5l1.4 1.4"/></svg>';
+                const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+                const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>';
+
+                function openSheet(phase) {
+                    currentPhase = phase || 'start';
+                    const eb = sheet.querySelector('[data-measure-err]'); if (eb) eb.hidden = true;
+                    const isStart = currentPhase === 'start';
+                    // Недельное взвешивание (w1..w3): только вес, без фото/активности —
+                    // одна цифра по желанию, для графика динамики.
+                    const isWeekly = /^w\d$/.test(currentPhase);
+                    sheet.querySelector('[data-measure-title]').textContent = isStart ? 'Анкета участницы'
+                        : (isWeekly ? 'Вес после недели ' + currentPhase.slice(1) : 'Финальные замеры');
+                    sheet.querySelector('[data-measure-sub]').textContent = isStart
+                        ? 'Возраст, рост и вес обязательны — по ним настроим питание. Объёмы и фото «до» — по желанию (по фото в конце покажем результат «до/после»).'
+                        : (isWeekly
+                            ? 'Запиши вес — и на главной появится график твоей динамики. Хочешь — добавь объёмы: талия и живот часто уходят раньше веса. Взвешивайся утром натощак, как в анкете.'
+                            : 'Заполни те же поля, что и в начале, — и увидишь свою разницу за 28 дней.');
+                    const m = KF.getMeasurements(currentPhase) || {};
+                    const fieldHtml = f =>
+                        '<div class="measure-field"><label for="m-' + f.key + '">' + f.label + (isStart && f.required ? ' <span class="req">*</span>' : '') + '</label>' +
+                        '<div class="inp-wrap"><input id="m-' + f.key + '" type="number" inputmode="decimal" step="' + f.step + '" min="0" data-mf="' + f.key + '" placeholder="—" value="' + (m[f.key] != null ? escapeHtml(String(m[f.key])) : '') + '">' +
+                        '<span class="unit">' + f.unit + '</span></div></div>';
+                    if (isWeekly) {
+                        // Неделя: вес главным, объёмы (грудь/талия/живот/бёдра) — в свёрнутой
+                        // «по желанию». Уже записаны в эту фазу → раскрываем сразу.
+                        const vols = MEASURE_FIELDS.filter(f => !f.startOnly && f.key !== 'weight');
+                        const volsOpen = vols.some(f => m[f.key] != null);
+                        grid.innerHTML = fieldHtml(MEASURE_FIELDS.find(f => f.key === 'weight')) +
+                            '<details class="measure-opt"' + (volsOpen ? ' open' : '') + '>' +
+                            '<summary>+ Записать и объёмы — по желанию</summary>' +
+                            '<div class="measure-opt__grid">' + vols.map(fieldHtml).join('') + '</div></details>';
+                    } else {
+                        // На финале возраст/рост не спрашиваем (startOnly).
+                        grid.innerHTML = MEASURE_FIELDS.filter(f => isStart || !f.startOnly).map(fieldHtml).join('');
+                    }
+                    // Уровень активности — только в анкете (фаза start), на финале не нужен.
+                    // По нему считается дневной бюджет калорий, поэтому даём описания.
+                    activityPick.hidden = !isStart;
+                    if (isStart) {
+                        const cur = activityLevel(m.activity).key;   // прежний выбор или средняя по умолчанию
+                        activityPick.innerHTML =
+                            '<span class="activity-pick__title">Твоя активность в обычной жизни <span class="req">*</span></span>' +
+                            '<span class="activity-pick__sub">Кроме тренировок программы — по ней рассчитаем дневной бюджет калорий.</span>' +
+                            ACTIVITY_LEVELS.map(lv =>
+                                '<label class="activity-opt' + (lv.key === cur ? ' is-on' : '') + '">' +
+                                    '<input type="radio" name="activity" value="' + lv.key + '"' + (lv.key === cur ? ' checked' : '') + '>' +
+                                    '<span class="activity-opt__main"><b>' + lv.label + '</b><em>' + lv.desc + '</em></span>' +
+                                '</label>'
+                            ).join('');
+                    } else {
+                        activityPick.innerHTML = '';
+                    }
+                    // Фото: новое не выбрано; показываем уже сохранённое (если есть).
+                    // У недельного взвешивания фото нет вовсе — блок прячем.
+                    photoBlob = null;
+                    photoDrop.hidden = isWeekly;
+                    photoHint.innerHTML = isStart
+                        ? 'Фото «до» — по желанию<br>в конце сравнишь с финальным'
+                        : 'Фото «после» — по желанию<br>увидишь его рядом со стартовым';
+                    photoDrop.classList.remove('photo-drop--req');
+                    releasePreviewUrl();    // прежнее превью больше не нужно
+                    setPhotoPreview(KF.getMeasurePhotoUrl(currentPhase));
+                    // Согласие на обработку данных — спрашиваем один раз, в анкете (start).
+                    // Уже дано раньше → блок не показываем повторно.
+                    consentBlock.hidden = !isStart || KF.consentAccepted();
+                    if (consentInput) consentInput.checked = false;
+                    // Стартовая анкета обязательна → без «Позже»; кнопка зовёт начать.
+                    const skipBtn = sheet.querySelector('[data-measure-skip]'); if (skipBtn) skipBtn.hidden = isStart;
+                    const subBtn = form.querySelector('button[type=submit]'); if (subBtn) subBtn.textContent = isStart ? 'Сохранить и начать' : (isWeekly ? 'Сохранить вес' : 'Сохранить замеры');
+                    sheet.classList.add('open');
+                    document.body.style.overflow = 'hidden';
+                }
+                function closeSheet() { sheet.classList.remove('open'); document.body.style.overflow = ''; }
+                function setPhotoPreview(url) {
+                    let img = photoDrop.querySelector('img');
+                    if (url) {
+                        if (!img) { img = document.createElement('img'); photoDrop.appendChild(img); }
+                        img.src = url;
+                        photoDrop.classList.add('has-photo');
+                    } else {
+                        if (img) img.remove();
+                        photoDrop.classList.remove('has-photo');
+                    }
+                }
+                // Сжатие фото до ~900px → Blob (это «на память», крупнее ежедневного превью).
+                function downscalePhoto(file, cb) {
+                    const img = new Image(); const url = URL.createObjectURL(file);
+                    img.onload = () => {
+                        const max = 900, scale = Math.min(1, max / Math.max(img.width, img.height));
+                        const cw = Math.round(img.width * scale), ch = Math.round(img.height * scale);
+                        const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+                        c.getContext('2d').drawImage(img, 0, 0, cw, ch);
+                        URL.revokeObjectURL(url);
+                        c.toBlob(b => cb(b), 'image/jpeg', 0.82);
+                    };
+                    img.onerror = () => { URL.revokeObjectURL(url); cb(null); };
+                    img.src = url;
+                }
+                // Подсветка выбранной карточки активности (радио рисуем как карточки).
+                activityPick.addEventListener('change', (e) => {
+                    if (!e.target.matches('input[name=activity]')) return;
+                    activityPick.querySelectorAll('.activity-opt').forEach(o =>
+                        o.classList.toggle('is-on', o.querySelector('input').checked));
+                });
+                photoInput.addEventListener('change', () => {
+                    const file = photoInput.files && photoInput.files[0];
+                    if (!file) return;
+                    downscalePhoto(file, (blob) => {
+                        if (!blob) return;
+                        photoBlob = blob;
+                        releasePreviewUrl();
+                        previewObjUrl = URL.createObjectURL(blob);
+                        setPhotoPreview(previewObjUrl);
+                    });
+                });
+
+                // Большая «убедительная» карточка-приглашение
+                function heroCard(phase) {
+                    const isStart = phase === 'start';
+                    // Анкету сделали обязательной не с самого начала проекта: участница могла
+                    // уже пройти часть программы без неё. Тогда «чтобы начать» врёт — зовём
+                    // «продолжить» и убираем «перед стартом» из текста.
+                    const started = isStart && (KF.progressDay > 1 || KF.completedCount() > 0);
+                    const title = isStart
+                        ? (started ? 'Заполни анкету, чтобы продолжить' : 'Заполни анкету, чтобы начать')
+                        : 'Сними финальные замеры';
+                    const lead = isStart
+                        ? (started
+                            ? 'Чтобы настроить твоё питание, заполни анкету: возраст, рост, вес. Фото «до» — по желанию (по нему в конце покажем результат «до/после»). Займёт минуту.'
+                            : 'Перед стартом нужны возраст, рост и вес — по ним настроим твоё питание. Фото «до» — по желанию (по нему в конце покажем результат «до/после»). Займёт минуту.')
+                        : 'Ты прошла все 28 дней! Запиши замеры сейчас — и сразу увидишь, что изменилось с самого старта.';
+                    const bullets = isStart
+                        ? ['Возраст, рост и вес (фото «до» — по желанию)', 'По ним рассчитаем твоё питание', 'Сравнение «до и после» в конце программы']
+                        : ['Сравним с замерами до старта', 'Увидишь, сколько ушло в сантиметрах', 'Твой личный результат за 28 дней'];
+                    // Старт обязателен → без «Позже».
+                    const later = isStart ? '' : '<button class="measure-hero__later" data-measure-dismiss="' + phase + '">Позже</button>';
+                    return '<div class="measure-hero" id="anketa">' +
+                        '<span class="measure-hero__badge">' + (isStart ? 'Обязательно' : 'Рекомендуем') + '</span>' +
+                        '<div class="measure-hero__top"><span class="measure-hero__ic">' + ICON + '</span><h3>' + title + '</h3></div>' +
+                        '<p class="measure-hero__lead">' + lead + '</p>' +
+                        '<ul class="measure-hero__list">' +
+                            bullets.map(b => '<li>' + CHECK + '<span>' + b + '</span></li>').join('') +
+                        '</ul>' +
+                        '<button class="btn btn--gold btn--block" data-measure-open="' + phase + '">' +
+                            (isStart ? 'Заполнить анкету' : 'Записать финальные замеры') + '</button>' +
+                        later +
+                    '</div>';
+                }
+
+                // Постоянная сводка «Твои замеры»
+                function summaryCard(phase, title, sub) {
+                    const m = KF.getMeasurements(phase) || {};
+                    let vals = MEASURE_FIELDS.filter(f => m[f.key] != null)
+                        .map(f => '<span class="measure-val">' + f.label + ' <b>' + escapeHtml(String(m[f.key])) + ' ' + f.unit + '</b></span>').join('');
+                    if (phase === 'start' && m.activity)
+                        vals += '<span class="measure-val">Активность <b>' + escapeHtml(activityLevel(m.activity).label) + '</b></span>';
+                    const purl = KF.getMeasurePhotoUrl(phase);
+                    const thumb = purl ? '<img class="measure-thumb" src="' + purl + '" alt="Фото замеров">' : '';
+                    return '<div class="measure-card measure-card--done">' +
+                        '<div class="measure-card__head"><span class="measure-card__ic">' + ICON + '</span>' +
+                        '<div><h3>' + title + '</h3><p>' + sub + '</p></div></div>' +
+                        '<div class="measure-vals">' + vals + '</div>' +
+                        thumb +
+                        '<button class="measure-edit" data-measure-open="' + phase + '">Изменить</button>' +
+                    '</div>';
+                }
+
+                // Компактная кнопка-чип «Мои данные и фото» — уезжает в самый низ, когда
+                // анкета уже заполнена (чтобы не мозолила глаза). Тап открывает редактирование.
+                function chipCard(phase) {
+                    return '<button class="measure-chip" data-measure-open="' + phase + '">' +
+                        '<span class="measure-chip__ic">' + ICON + '</span>' +
+                        '<span class="measure-chip__txt">Мои данные и фото</span>' +
+                        '<span class="measure-chip__edit">Изменить' + ARROW + '</span>' +
+                    '</button>';
+                }
+
+                // Красивое сравнение «до и после»
+                function compareCard() {
+                    const rows = KF.measureProgress();
+                    if (!rows.length) return summaryCard('finish', 'Финальные замеры', 'Записаны.');
+                    const w = rows.find(r => r.key === 'weight');
+                    const cmLost = rows.filter(r => r.key !== 'weight').reduce((s, r) => s + (r.delta < 0 ? -r.delta : 0), 0);
+                    const big = [];
+                    if (w && w.delta < 0) big.push('<div class="mc-big"><span>Вес</span><b>−' + Math.abs(w.delta) + ' кг</b></div>');
+                    if (cmLost > 0) big.push('<div class="mc-big"><span>Объёмы</span><b>−' + (+cmLost.toFixed(1)) + ' см</b></div>');
+                    const headline = big.length ? '<div class="mc-headline">' + big.join('') + '</div>' : '';
+                    // Коллаж «до/после» (если есть хотя бы одно фото прогресса).
+                    const sUrl = KF.getMeasurePhotoUrl('start'), fUrl = KF.getMeasurePhotoUrl('finish');
+                    const cell = (url, cap) => '<figure class="mc-photo">' +
+                        (url ? '<img src="' + url + '" alt="' + cap + '">' : '<span class="mc-photo__empty">Нет фото</span>') +
+                        '<figcaption>' + cap + '</figcaption></figure>';
+                    const photos = (sUrl || fUrl)
+                        ? '<div class="mc-photos">' + cell(sUrl, 'До') + cell(fUrl, 'После') + '</div>'
+                        : '';
+                    const body = rows.map(r => {
+                        const cls = r.delta === 0 ? 'is-same' : (r.delta < 0 ? 'is-down' : 'is-up');
+                        const txt = r.delta === 0 ? '0 ' + r.unit : (r.delta > 0 ? '+' : '−') + Math.abs(r.delta) + ' ' + r.unit;
+                        return '<div class="mc-row">' +
+                            '<span class="mc-row__label">' + r.label + '</span>' +
+                            '<span class="mc-row__nums"><b>' + r.from + '</b>' + ARROW + '<b>' + r.to + '</b> ' + r.unit + '</span>' +
+                            '<span class="mc-delta mc-delta--' + cls + '">' + txt + '</span>' +
+                        '</div>';
+                    }).join('');
+                    return '<div class="measure-compare">' +
+                        '<div class="measure-compare__head"><span class="measure-compare__emo">📊</span>' +
+                            '<div><h3>Твой результат за 28 дней</h3><p>Сравнение замеров до и после.</p></div></div>' +
+                        headline +
+                        photos +
+                        '<div class="mc-rows">' + body + '</div>' +
+                        '<button class="measure-edit" data-measure-open="finish">Изменить финальные замеры</button>' +
+                    '</div>';
+                }
+
+                // Карточка недельного взвешивания (по желанию): неделя прожита,
+                // веса за неё нет. «Позже» гасит до следующей сессии (sessionStorage).
+                function weeklyCard(due) {
+                    const SCALE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 10.5a3.5 3.5 0 0 1 7 0"/><path d="M12 10.5l1.8-1.8"/></svg>';
+                    return '<div class="weekly-card">' +
+                        '<span class="weekly-card__ic">' + SCALE + '</span>' +
+                        '<div class="weekly-card__txt"><h3>Неделя ' + due.week + ' позади!</h3>' +
+                        '<p>Запиши вес — по желанию, для графика динамики. Хочешь — добавь и объёмы: талия часто уходит раньше веса.</p></div>' +
+                        '<div class="weekly-card__btns">' +
+                            '<button class="btn btn--gold" data-measure-open="' + due.phase + '">Записать вес</button>' +
+                            '<button class="weekly-card__later" data-measure-dismiss="' + due.phase + '">Позже</button>' +
+                        '</div></div>';
+                }
+
+                // Мини-график веса: старт → недели → финал (рисуем от 2 точек).
+                function weightChartCard() {
+                    const pts = KF.weightSeries();
+                    if (pts.length < 2) return '';
+                    const W = 320, H = 96, padX = 26, padT = 18, padB = 20;
+                    const vals = pts.map(p => p.w);
+                    const min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+                    const span = Math.max(0.8, max - min);  // все точки равны → линия не скачет
+                    const x = i => padX + i * (W - padX * 2) / (pts.length - 1);
+                    const y = v => padT + (max - v) * (H - padT - padB) / span;
+                    let line = '', dots = '', labels = '';
+                    pts.forEach((p, i) => {
+                        const px = +x(i).toFixed(1), py = +y(p.w).toFixed(1);
+                        line += (i ? ' ' : '') + px + ',' + py;
+                        dots += '<circle cx="' + px + '" cy="' + py + '" r="3.4" class="wc-dot' + (i === pts.length - 1 ? ' wc-dot--last' : '') + '"/>';
+                        labels += '<text x="' + px + '" y="' + (py - 7) + '" class="wc-val">' + p.w + '</text>' +
+                            '<text x="' + px + '" y="' + (H - 4) + '" class="wc-lbl">' + p.label + '</text>';
+                    });
+                    const delta = +(vals[vals.length - 1] - vals[0]).toFixed(1);
+                    const badge = delta < 0 ? '<b class="down">−' + Math.abs(delta) + ' кг</b>'
+                        : (delta > 0 ? '<b class="up">+' + delta + ' кг</b>' : '<b>0 кг</b>');
+                    return '<div class="weight-chart">' +
+                        '<div class="weight-chart__head"><span>Динамика веса</span>' + badge + '</div>' +
+                        '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="График веса по неделям">' +
+                            '<polyline class="wc-line" points="' + line + '"/>' + dots + labels +
+                        '</svg></div>';
+                }
+
+                function render() {
+                    const hasStart = KF.hasMeasurements('start');
+                    const hasFinish = KF.hasMeasurements('finish');
+                    let html = '';      // верхний слот (заметные карточки)
+                    let bottom = '';    // нижний слот (компактная кнопка)
+
+                    if (!KF.isFinished()) {
+                        // Программа идёт. Стартовая анкета ОБЯЗАТЕЛЬНА (ворота к Дню 1):
+                        // не заполнена → большая анкета вверху; заполнена → уезжает в самый
+                        // низ компактной кнопкой «Мои данные и фото» (не мозолит глаза).
+                        if (KF.anketaComplete()) bottom += chipCard('start');
+                        else html += heroCard('start');
+                        // Недельное взвешивание (по желанию) + график динамики.
+                        const due = KF.weeklyDue();
+                        if (due && !KF.measureDismissed(due.phase)) html += weeklyCard(due);
+                        html += weightChartCard();
+                    } else {
+                        // Программа пройдена: показываем результат, просим финальные.
+                        if (hasStart && hasFinish) {
+                            html += compareCard();
+                        } else {
+                            if (hasStart) html += summaryCard('start', 'Замеры до старта', 'Сделай финальные — и увидишь разницу.');
+                            if (hasFinish) html += summaryCard('finish', 'Финальные замеры', 'Записаны.');
+                            else if (KF.measureDismissed('finish')) html += '<div class="measure-mini"><button data-measure-open="finish">+ Записать финальные замеры</button></div>';
+                            else html += heroCard('finish');
+                        }
+                        html += weightChartCard();  // весь путь: старт → недели → финал
+                    }
+
+                    slot.innerHTML = html;
+                    if (slotBottom) slotBottom.innerHTML = bottom;
+                    [slot, slotBottom].forEach(s => {
+                        if (!s) return;
+                        s.querySelectorAll('[data-measure-open]').forEach(b => b.addEventListener('click', () => openSheet(b.dataset.measureOpen)));
+                        s.querySelectorAll('[data-measure-dismiss]').forEach(b => b.addEventListener('click', () => { KF.dismissMeasure(b.dataset.measureDismiss); render(); }));
+                    });
+                }
+
+                const errBox = form.querySelector('[data-measure-err]');
+                const submitBtn = form.querySelector('button[type=submit]');
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    errBox.hidden = true;
+                    const isStart = currentPhase === 'start';
+                    const data = {};
+                    form.querySelectorAll('[data-mf]').forEach(inp => {
+                        const v = inp.value.trim();
+                        if (v !== '') data[inp.dataset.mf] = v;
+                    });
+                    // Уровень активности (только в анкете) — для бюджета калорий.
+                    const actSel = form.querySelector('input[name=activity]:checked');
+                    if (actSel) data.activity = actSel.value;
+
+                    if (isStart) {
+                        // Анкета обязательна: возраст/рост/вес. Фото «до» — по желанию.
+                        const missing = MEASURE_FIELDS.filter(f => f.required && data[f.key] == null);
+                        if (missing.length) {
+                            errBox.hidden = false;
+                            errBox.textContent = 'Чтобы начать программу, заполни ' + missing.map(f => f.label.toLowerCase()).join(', ') + '.';
+                            return;
+                        }
+                        if (!consentBlock.hidden && consentInput && !consentInput.checked) {
+                            errBox.hidden = false;
+                            errBox.textContent = 'Нужно принять условия обработки данных, чтобы продолжить.';
+                            return;
+                        }
+                    } else if (Object.keys(data).length === 0 && !photoBlob) {
+                        // Финал по желанию: пустая форма = «Позже» (на сессию).
+                        KF.dismissMeasure(currentPhase); closeSheet(); render(); return;
+                    } else if (/^w\d$/.test(currentPhase) && data.weight == null) {
+                        // Неделя: объёмы записала, а вес — нет. Без веса не построится
+                        // график, и карточка «Неделя позади» будет предлагаться снова.
+                        errBox.hidden = false;
+                        errBox.textContent = 'Запиши и вес — без него не построится график динамики.';
+                        return;
+                    }
+
+                    submitBtn.disabled = true; submitBtn.textContent = 'Сохраняем…';
+                    const res = await KF.saveMeasurements(currentPhase, data, photoBlob);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = isStart ? 'Сохранить и начать'
+                        : (/^w\d$/.test(currentPhase) ? 'Сохранить вес' : 'Сохранить замеры');
+                    if (!res.ok) {
+                        // НЕ закрываем шторку — показываем ошибку, цифры не теряются.
+                        errBox.hidden = false;
+                        errBox.textContent = res.reason === 'auth'
+                            ? 'Сессия входа истекла. Закрой это окно, нажми «Выйти» и зайди заново по коду из письма — тогда замеры сохранятся.'
+                            : 'Не удалось сохранить — проверь интернет и нажми «Сохранить» ещё раз. Введённые цифры не потеряны.';
+                        return;
+                    }
+                    // Замеры в базе — сразу фиксируем согласие (если это был первый раз).
+                    // Именно ДО ветки photoFailed: её ранний return иначе терял отметку
+                    // согласия, хотя галочка стояла и данные уже сохранены.
+                    // Блок прячем ТОЛЬКО при успешной записи: сбой сети не должен молча
+                    // терять юридическое согласие (152-ФЗ) — при следующем открытии
+                    // анкеты чекбокс покажется снова и запись повторится.
+                    if (isStart && !consentBlock.hidden) {
+                        const c = await KF.acceptConsent();
+                        if (c && c.ok) consentBlock.hidden = true;
+                    }
+                    if (res.photoFailed) {
+                        // Замеры легли, а фото — нет (сеть). НЕ закрываем: фото остаётся
+                        // выбранным, можно нажать «Сохранить» ещё раз. Цифры уже в базе.
+                        errBox.hidden = false;
+                        errBox.textContent = 'Замеры сохранены! Только фото не загрузилось — проверь интернет и нажми «Сохранить» ещё раз. Можно добавить фото и позже.';
+                        render();
+                        return;
+                    }
+                    closeSheet(); render();
+                });
+                sheet.querySelector('[data-measure-close]').addEventListener('click', closeSheet);
+                sheet.querySelector('[data-measure-skip]').addEventListener('click', () => { KF.dismissMeasure(currentPhase); closeSheet(); render(); });
+                sheet.addEventListener('click', (e) => { if (e.target === sheet) closeSheet(); });
+                document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet(); });
+
+                render();
+                // Переход со страницы Дня 1 («Заполнить анкету») → сразу открываем анкету.
+                if (location.hash === '#anketa' && !KF.anketaComplete()) openSheet('start');
+            }
+
+            // ─── Подсказка «Добавь кабинет на экран телефона» (PWA) ───
+            // iPhone сам установку не предлагает — участница живёт в браузере и не
+            // знает, что кабинет ставится как приложение. Показываем один раз внизу;
+            // «✕» гасит навсегда (localStorage). В установленном приложении не показываем.
+            function initPwaHint() {
+                const slot = document.querySelector('[data-pwa-slot]');
+                if (!slot) return;
+                const standalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+                let dismissed = false;
+                try { dismissed = localStorage.getItem('kf_pwa_hint') === '1'; } catch (e) {}
+                if (standalone || dismissed) return;
+                const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+                const IC_SHARE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 15V3.5"/><path d="M8 7l4-3.5L16 7"/><path d="M6 11H5a1.5 1.5 0 0 0-1.5 1.5V19A1.5 1.5 0 0 0 5 20.5h14A1.5 1.5 0 0 0 20.5 19v-6.5A1.5 1.5 0 0 0 19 11h-1"/></svg>';
+                const IC_PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>';
+                const how = ios
+                    ? 'нажми <b>Поделиться</b> ' + IC_SHARE + ' внизу Safari и выбери <b>«На экран “Домой”»</b>'
+                    : 'открой меню браузера (⋮) и выбери <b>«Установить приложение»</b> или <b>«Добавить на главный экран»</b>';
+                slot.innerHTML = '<div class="pwa-hint">' +
+                    '<span class="pwa-hint__ic">' + IC_PHONE + '</span>' +
+                    '<div class="pwa-hint__body"><b>Добавь кабинет на экран телефона</b>' +
+                    '<p>Кабинет будет открываться одним нажатием, как обычное приложение: ' + how + '.</p></div>' +
+                    '<button type="button" class="pwa-hint__x" data-pwa-close aria-label="Скрыть подсказку">✕</button></div>';
+                slot.querySelector('[data-pwa-close]').addEventListener('click', () => {
+                    try { localStorage.setItem('kf_pwa_hint', '1'); } catch (e) {}
+                    slot.innerHTML = '';
+                });
+            }
+
+            // ─── Шторка «Сообщить о проблеме» (ручная жалоба → KFErr.feedback → бот) ───
+            function initReport() {
+                const sheet = document.querySelector('[data-report-sheet]');
+                const openBtn = document.querySelector('[data-report-open]');
+                if (!sheet || !openBtn) return;            // безопасная инициализация
+                const form = sheet.querySelector('[data-report-form]');
+                const text = sheet.querySelector('[data-report-text]');
+                const done = sheet.querySelector('[data-report-done]');
+                const intro = sheet.querySelector('[data-report-intro]');
+
+                function open() {
+                    form.hidden = false; done.hidden = true; intro.hidden = false; text.value = '';
+                    sheet.classList.add('open'); document.body.style.overflow = 'hidden';
+                    setTimeout(() => text.focus(), 250);
+                }
+                function close() { sheet.classList.remove('open'); document.body.style.overflow = ''; }
+
+                openBtn.addEventListener('click', open);
+                sheet.querySelectorAll('[data-report-close]').forEach(b => b.addEventListener('click', close));
+                sheet.addEventListener('click', (e) => { if (e.target === sheet) close(); });
+                document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheet.classList.contains('open')) close(); });
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const sent = window.KFErr && KFErr.feedback(text.value);
+                    if (!sent) { text.focus(); return; }    // пусто — не отправляем
+                    form.hidden = true; intro.hidden = true; done.hidden = false;
+                });
+            }
+
+            renderTier();
+            renderProgress();
+            // Календарь и остальное НЕ зависят от сети — рисуем сразу, а карточку
+            // «Продолжаем» (единственный сетевой запрос) ждём последней: раньше
+            // зависший запрос дня держал скелетоном ВЕСЬ дашборд ниже карточки.
+            renderWeeks();
+            initMeasure();
+            initPwaHint();
+            initReport();
+            maybeOfferResume();
+            await renderContinue();
+        })();
+    </script>
+</body>
+</html>

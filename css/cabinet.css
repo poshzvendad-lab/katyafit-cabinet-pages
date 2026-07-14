@@ -1,0 +1,1216 @@
+/* ============================================================
+   KatyaFit · Личный кабинет — компоненты (ФАЗА 0)
+   Подход: MOBILE-FIRST. Базовые стили = телефон, @media (min-width)
+   добавляют десктоп. Основная аудитория — мобильные.
+   ============================================================ */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+body {
+    font-family: var(--font-sans);
+    background: var(--bg-milk);
+    color: var(--text-main);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100svh;
+    overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
+img { max-width: 100%; display: block; }
+
+h1, h2, h3, .display { font-family: var(--font-display); font-weight: 600; line-height: 1.16; letter-spacing: -0.01em; }
+
+.container { width: 100%; max-width: var(--container); margin: 0 auto; padding: 0 16px; }
+@media (min-width: 720px) { .container { padding: 0 24px; } }
+
+.hidden, [hidden] { display: none !important; }
+
+/* Скелет-заглушка, пока грузятся данные участницы (убирает мигание «Гостья»).
+   initTopbar() снимает .is-skel и проставляет имя, когда профиль загружен. */
+.is-skel {
+    display: inline-block; min-width: 5em; height: 0.92em; vertical-align: -0.08em;
+    border-radius: 7px; color: transparent !important;
+    background: linear-gradient(100deg, var(--gold-soft) 28%, rgba(255,255,255,0.35) 50%, var(--gold-soft) 72%);
+    background-size: 220% 100%; animation: kf-shimmer 1.25s ease-in-out infinite;
+}
+@keyframes kf-shimmer { 0% { background-position: 220% 0; } 100% { background-position: -220% 0; } }
+@media (prefers-reduced-motion: reduce) { .is-skel { animation: none; } }
+
+/* Блочные скелетоны контента дашборда — статичные заглушки в слотах
+   [data-continue-slot] и [data-weeks], которые рендер заменяет данными.
+   Держат высоту, пока идёт сеть, чтобы карточки не «прыгали» при появлении. */
+.skel-block {
+    background: linear-gradient(100deg, var(--gold-soft) 28%, rgba(255,255,255,0.35) 50%, var(--gold-soft) 72%);
+    background-size: 220% 100%; animation: kf-shimmer 1.25s ease-in-out infinite;
+}
+.skel-today { height: 156px; border-radius: 20px; margin-bottom: 1.8rem; }
+.skel-cal   { height: 250px; border-radius: var(--radius); }
+@media (prefers-reduced-motion: reduce) { .skel-block { animation: none; } }
+
+/* Строка-ошибка внутри шторок (например, не удалось сохранить замеры). */
+.sheet-err {
+    color: var(--danger); background: var(--danger-soft);
+    border: 1px solid rgba(178,59,47,0.22); border-radius: 12px;
+    font-size: 0.9rem; line-height: 1.45; padding: 0.7rem 0.9rem; margin-bottom: 0.9rem;
+}
+
+/* ─── Кнопки (тап-таргет ≥ 48px) ─────────────────────────── */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    font-family: var(--font-ui); font-weight: 600; font-size: 1rem; min-height: 50px;
+    padding: 0.7rem 1.5rem; border: none; border-radius: 999px;
+    cursor: pointer; transition: var(--transition); white-space: nowrap; line-height: 1.2;
+}
+.btn--gold { background: var(--gold); color: #1a1f1c; box-shadow: var(--shadow-gold); }
+.btn--gold:active { transform: scale(0.98); }
+.btn--ghost { background: var(--bg-pure); color: var(--text-main); border: 1.5px solid var(--border-color); }
+.btn--ghost:active { transform: scale(0.98); }
+.btn--block { width: 100%; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; transform: none; }
+@media (hover: hover) {
+    .btn--gold:hover { background: var(--gold-hover); transform: translateY(-2px); }
+    .btn--ghost:hover { border-color: var(--gold); color: var(--gold-hover); }
+}
+
+/* ─── Топбар ─────────────────────────────────────────────── */
+.topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(22, 26, 23, 0.94);
+    backdrop-filter: blur(24px) saturate(1.1);
+    -webkit-backdrop-filter: blur(24px) saturate(1.1);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 0.7rem 0; padding-top: calc(0.7rem + env(safe-area-inset-top));
+}
+.topbar__inner { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; }
+.brand { display: flex; align-items: baseline; gap: 0.5rem; color: var(--text-on-dark); }
+.brand__logo { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; }
+.brand__logo b { color: var(--gold); }
+.brand__sub { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-on-dark-muted); }
+.topbar__user { display: flex; align-items: center; gap: 0.7rem; color: var(--text-on-dark); font-size: 0.9rem; }
+.topbar__user .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--gold-soft); color: var(--gold);
+    display: grid; place-items: center; font-weight: 700; border: 1px solid var(--gold-soft);
+}
+.topbar__user [data-user-name] { display: none; }
+.topbar__logout { color: var(--text-on-dark-muted); font-size: 0.85rem; position: relative; }
+/* Тап-зона ≥48px (правило mobile-first) без изменения визуала: ссылка «Выйти»
+   визуально 42×22 — расширяем область нажатия невидимым псевдоэлементом. */
+.topbar__logout::after { content: ''; position: absolute; inset: -14px -10px; }
+@media (min-width: 560px) { .topbar__user [data-user-name] { display: inline; } }
+@media (hover: hover) { .topbar__logout:hover { color: var(--gold); } }
+
+/* ─── Экран входа ────────────────────────────────────────── */
+.auth-wrap {
+    min-height: 100svh; display: grid; place-items: center; padding: 20px;
+    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    background: radial-gradient(120% 80% at 50% -10%, rgba(201,169,110,0.12), transparent 60%), var(--bg-deep);
+}
+.auth-card {
+    width: 100%; max-width: 420px; background: var(--bg-pure); border-radius: 22px;
+    padding: 2.4rem 1.6rem; box-shadow: var(--shadow-hover); text-align: center;
+}
+.auth-card .brand { justify-content: center; color: var(--text-main); }
+.auth-card .brand__logo { font-size: 1.6rem; }
+.auth-card .brand__sub { color: var(--text-muted); margin-top: 0.2rem; }
+.auth-title { font-size: 1.8rem; margin: 1.2rem 0 0.4rem; }
+.auth-sub { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.8rem; }
+.field { text-align: left; margin-bottom: 1rem; }
+.field label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem; }
+.field input {
+    width: 100%; padding: 0.9rem 1rem; font-size: 1rem; font-family: inherit; min-height: 52px;
+    border: 1.5px solid var(--border-color); border-radius: 14px; background: var(--bg-milk); transition: var(--transition);
+}
+.field input:focus { outline: none; border-color: var(--gold); background: var(--bg-pure); box-shadow: 0 0 0 4px var(--gold-soft); }
+.auth-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 1.3rem; line-height: 1.5; }
+.auth-note a { color: var(--sage-medium); text-decoration: underline; text-underline-offset: 2px; }
+@media (hover: hover) { .auth-note a:hover { color: var(--gold-hover); } }
+.auth-msg { font-size: 0.9rem; color: var(--sage-medium); background: var(--sage-soft); border-radius: 14px; padding: 0.9rem 1rem; margin-top: 1.2rem; line-height: 1.5; }
+.auth-msg b { color: var(--text-main); }
+.auth-msg.is-error { color: var(--danger); background: var(--danger-soft); }
+/* Ввод кода из письма (вход по 6-значному коду) */
+.field input.code-input {
+    text-align: center; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.5em;
+    padding-left: 0.5em; font-family: var(--font-ui);
+}
+.field input.code-input::placeholder { letter-spacing: 0.4em; font-weight: 400; }
+.auth-actions { display: flex; justify-content: center; gap: 1.2rem; flex-wrap: wrap; margin-top: 1.1rem; }
+.auth-link {
+    background: none; border: none; cursor: pointer; padding: 0.3rem;
+    font-family: var(--font-ui); font-size: 0.86rem; color: var(--sage-medium);
+    text-decoration: underline; text-underline-offset: 3px;
+}
+.auth-link:disabled { opacity: 0.45; cursor: default; text-decoration: none; }
+@media (hover: hover) { .auth-link:not(:disabled):hover { color: var(--gold-hover); } }
+
+/* ─── Дашборд ────────────────────────────────────────────── */
+.dash { padding: 1.4rem 0 3rem; }
+.dash-hero { background: var(--bg-pure); border-radius: 20px; padding: 1.5rem; box-shadow: var(--shadow-card); margin-bottom: 1.2rem; }
+.dash-hero__greet h1 { font-size: 1.9rem; margin-bottom: 0.2rem; }
+.dash-hero__greet p { color: var(--text-muted); font-size: 0.92rem; }
+.dash-hero__greet .accent { color: var(--gold-hover); }
+.progress-block { margin-top: 1.4rem; }
+.progress-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+.progress-meta b { color: var(--text-main); }
+.progress-bar { height: 12px; background: var(--sage-soft); border-radius: 999px; overflow: hidden; }
+.progress-bar__fill { height: 100%; background: linear-gradient(90deg, var(--sage), var(--gold)); border-radius: 999px; transition: width 0.8s var(--ease-out); }
+.progress-stats { display: flex; gap: 1.6rem; margin-top: 1rem; }
+.progress-stats .stat { font-size: 0.82rem; color: var(--text-muted); }
+.progress-stats .stat b { display: block; font-family: var(--font-display); font-size: 1.6rem; color: var(--text-main); line-height: 1; margin-bottom: 0.15rem; }
+@media (min-width: 720px) {
+    .dash { padding: 2.2rem 0 4rem; }
+    .dash-hero { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 2rem; }
+    .progress-block { margin-top: 0; min-width: 300px; flex: 1; }
+    .dash-hero__greet h1 { font-size: 2.2rem; }
+}
+
+/* ─── Карточка «Продолжить / Сегодня» ────────────────────── */
+.today-card {
+    display: block; background: linear-gradient(135deg, var(--sage-deep), var(--bg-elevated));
+    color: var(--text-on-dark); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.8rem;
+    box-shadow: var(--shadow-card); position: relative; overflow: hidden;
+}
+.today-card::before {
+    content: ''; position: absolute; right: -40px; top: -40px; width: 180px; height: 180px;
+    background: radial-gradient(circle, var(--gold-glow), transparent 70%); pointer-events: none;
+}
+.today-card__label { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.4rem; }
+.today-card__title { font-size: 1.5rem; margin-bottom: 0.3rem; position: relative; }
+.today-card__meta { color: var(--text-on-dark-muted); font-size: 0.9rem; margin-bottom: 1.2rem; }
+.today-card .btn { width: 100%; }
+@media (min-width: 560px) {
+    .today-card { display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; padding: 1.8rem 2rem; }
+    .today-card .btn { width: auto; }
+    .today-card__meta { margin-bottom: 0; }
+}
+
+/* ─── Календарь: карусель недель ─────────────────────────── */
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; margin: 0 0 1rem; flex-wrap: wrap; }
+.section-head h2 { font-size: 1.4rem; }
+.section-head .hint { font-size: 0.8rem; color: var(--text-muted); }
+
+/* Табы-селектор недель */
+.cal-tabs {
+    display: flex; gap: 0.5rem; overflow-x: auto;
+    /* Вертикальный паддинг + компенсирующий margin: тап-зона табов (::after ниже)
+       остаётся ВНУТРИ скролл-контейнера (overflow его клипует), визуально всё как было. */
+    padding: 7px 0 calc(0.3rem + 7px); margin: -7px 0 calc(0.9rem - 7px);
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.cal-tabs::-webkit-scrollbar { display: none; }
+.cal-tab {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 0.45rem; white-space: nowrap;
+    border: 1.5px solid var(--border-color); background: var(--bg-pure); border-radius: 999px;
+    padding: 0.5rem 0.9rem; cursor: pointer; transition: var(--transition);
+    font-family: var(--font-ui); font-weight: 600; font-size: 0.85rem; color: var(--text-muted);
+    position: relative;
+}
+/* Тап-зона таба недели ≥48px (визуально пилюля 35px) — добираем по вертикали,
+   по горизонтали не расширяем, чтобы не наезжать на соседний таб. */
+.cal-tab::after { content: ''; position: absolute; inset: -7px 0; }
+.cal-tab__count {
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 700; min-width: 1.55rem; min-height: 1.05rem;
+    padding: 0.1rem 0.4rem; border-radius: 999px; background: var(--bg-milk); color: var(--text-muted);
+}
+.cal-tab__count svg { width: 11px; height: 11px; }
+.cal-tab.is-active { border-color: var(--gold); background: var(--gold-soft); color: var(--text-main); box-shadow: var(--shadow-soft); }
+.cal-tab.is-active .cal-tab__count { background: var(--gold); color: #fff; }
+.cal-tab.is-done .cal-tab__count { background: var(--state-done); color: #fff; }
+
+/* Трек-карусель: одна неделя в видимой области, листается свайпом */
+.cal-track {
+    display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory;
+    scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
+    padding: 4px 2px 22px; scrollbar-width: none;
+}
+.cal-track::-webkit-scrollbar { display: none; }
+
+.cal-week {
+    flex: 0 0 100%; scroll-snap-align: center; box-sizing: border-box;
+    background: var(--bg-pure); border: 1.5px solid var(--border-color);
+    border-radius: var(--radius); padding: 1.1rem 1rem 1.2rem; box-shadow: var(--shadow-soft);
+}
+.cal-week__head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+.cal-week__title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1; }
+.cal-week__progress { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
+.cal-week__sub { font-size: 0.76rem; color: var(--text-muted); margin: 0.35rem 0 0.95rem; }
+
+/* Сетка дней внутри недели — крупные стильные квадраты */
+.days-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+
+.day-cell {
+    position: relative; aspect-ratio: 1 / 1; border-radius: 16px;
+    background: var(--bg-milk); border: 1.5px solid var(--border-color);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem;
+    cursor: pointer; transition: var(--transition); text-align: center; padding: 0.4rem; overflow: hidden;
+}
+.day-cell__num { font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; line-height: 1; }
+.day-cell__icon { display: flex; line-height: 0; color: var(--text-muted); }
+.day-cell__icon svg { width: 21px; height: 21px; }
+.day-cell__icon--workout { color: var(--gold-hover); }
+.day-cell__icon--recovery { color: var(--sage); }
+.day-cell__icon--rest { color: var(--text-muted); }
+.day-cell__tag { font-size: 0.56rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+
+/* Статус-чип в углу */
+.day-cell .badge-ic {
+    position: absolute; top: 6px; right: 6px; width: 19px; height: 19px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+.day-cell .badge-ic svg { width: 11px; height: 11px; }
+
+/* Пройден */
+.day-cell--done { background: var(--sage-soft); border-color: var(--state-done); }
+.day-cell--done .day-cell__num { color: var(--sage-medium); }
+.day-cell--done .badge-ic { background: var(--state-done); color: #fff; }
+
+/* Текущий — мягко «дышит» золотым свечением */
+.day-cell--today {
+    background: linear-gradient(160deg, var(--bg-pure), var(--gold-soft));
+    border-color: var(--state-today); animation: todayGlow 2.6s var(--ease-out) infinite;
+}
+.day-cell--today .day-cell__num { color: var(--gold-hover); }
+@keyframes todayGlow {
+    0%, 100% { box-shadow: 0 5px 16px rgba(201, 169, 110, 0.20); }
+    50%      { box-shadow: 0 9px 28px rgba(201, 169, 110, 0.42); }
+}
+
+/* Закрыт */
+.day-cell--locked { cursor: default; background: var(--bg-milk); }
+.day-cell--locked .day-cell__num { color: var(--state-locked); }
+.day-cell--locked .day-cell__icon { color: var(--state-locked); }
+.day-cell--locked .day-cell__tag { opacity: 0.55; }
+.day-cell--locked .badge-ic { background: rgba(26, 31, 28, 0.06); color: var(--text-muted); }
+
+@media (hover: hover) {
+    .day-cell:not(.day-cell--locked):hover { transform: translateY(-3px); box-shadow: var(--shadow-card); border-color: var(--gold); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .cal-track { scroll-behavior: auto; }
+    .day-cell--today { animation: none; box-shadow: var(--shadow-gold); }
+}
+@media (min-width: 560px) {
+    .cal-week { padding: 1.4rem 1.3rem 1.5rem; }
+    .days-grid { grid-template-columns: repeat(7, 1fr); gap: 0.7rem; }
+    .day-cell__num { font-size: 1.55rem; }
+}
+
+/* Список покупок недели (дашборд, раскрывающийся блок под сеткой дней) */
+.shop { margin-top: 0.9rem; border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-milk); overflow: hidden; }
+.shop > summary { list-style: none; cursor: pointer; min-height: 52px; padding: 0.9rem 1rem; display: flex; align-items: center; gap: 0.55rem;
+    font-weight: 700; font-size: 0.88rem; color: var(--text-main); }
+.shop > summary::-webkit-details-marker { display: none; }
+.shop > summary .ic { flex: none; width: 20px; height: 20px; color: var(--sage-medium); }
+.shop > summary .ic svg { width: 100%; height: 100%; display: block; }
+.shop > summary::after { content: ''; flex: none; margin-left: auto; width: 9px; height: 9px; border-right: 2px solid var(--sage-medium);
+    border-bottom: 2px solid var(--sage-medium); transform: rotate(45deg); transition: var(--transition); }
+.shop[open] > summary::after { transform: rotate(-135deg); }
+.shop__body { padding: 0 1rem 0.95rem; }
+.shop-group__h { padding: 0.7rem 0 0.15rem; font-weight: 700; font-size: 0.8rem; color: var(--sage-medium); }
+.shop-items { list-style: none; margin: 0; padding: 0; }
+.shop-items li { font-size: 0.82rem; }
+.shop-items li + li { border-top: 1px solid var(--border-color); }
+/* Строка-чекбокс «куплено»: вся строка — тап-таргет ≥48px, отметки в localStorage */
+.shop-it { display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 48px; padding: 0.3rem 0;
+    cursor: pointer; user-select: none; }
+.shop-it input { display: none; }
+.shop-it .box { flex: none; width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--border-color);
+    display: grid; place-items: center; color: #fff; background: var(--bg-pure); transition: var(--transition); }
+.shop-it .box svg { width: 14px; height: 14px; display: block; opacity: 0; }
+.shop-it input:checked + .box { background: var(--sage); border-color: var(--sage); }
+.shop-it input:checked + .box svg { opacity: 1; }
+.shop-items .n { flex: 1 1 auto; min-width: 0; color: var(--text-main); }
+.shop-items .q { flex: none; text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.shop-items li.is-bought .n, .shop-items li.is-bought .q { color: var(--text-muted); text-decoration: line-through; }
+.shop__cnt { flex: none; font-size: 0.72rem; font-weight: 700; color: var(--sage-medium);
+    background: var(--sage-soft); border-radius: 999px; padding: 0.2rem 0.55rem; }
+.shop__reset { border: 0; background: none; padding: 0.4rem 0; margin-top: 0.4rem; font: inherit; font-size: 0.78rem;
+    font-weight: 600; color: var(--gold-hover); text-decoration: underline; text-underline-offset: 2px;
+    cursor: pointer; min-height: 44px; }
+/* «Скопировать список» — чип сверху списка (под подсказкой), заметен сразу */
+.shop__copy { display: inline-flex; align-items: center; gap: 0.45rem; margin: 0.6rem 0 0.15rem; padding: 0.5rem 1rem;
+    min-height: 44px; border: 1px solid var(--border-color); border-radius: 999px; background: var(--bg-pure);
+    font: inherit; font-size: 0.78rem; font-weight: 700; color: var(--sage-medium); cursor: pointer;
+    transition: var(--transition); }
+.shop__copy svg { flex: none; }
+.shop__copy:active { background: var(--champagne); border-color: var(--gold); }
+.shop__note { margin: 0.8rem 0 0; padding: 0.55rem 0.7rem; border-radius: 10px; background: var(--bg-pure);
+    border: 1px solid var(--border-color); font-size: 0.74rem; line-height: 1.45; color: var(--text-muted); }
+
+/* Переключатель вида списка: «По категориям» / «По дням и блюдам» */
+.shop-view { display: flex; gap: 0.4rem; margin-top: 0.7rem; }
+.shop-view__btn { flex: 1 1 0; min-height: 48px; padding: 0.45rem 0.5rem; border: 1.5px solid var(--border-color);
+    border-radius: 12px; background: var(--bg-pure); font: inherit; font-size: 0.78rem; font-weight: 600;
+    color: var(--text-muted); cursor: pointer; transition: var(--transition); }
+.shop-view__btn.is-active { border-color: var(--sage); background: var(--sage-soft); color: var(--text-main); font-weight: 700; }
+
+/* Вид «по дням и блюдам»: каждый день — своя карточка (было — просто
+   подзаголовок с тонкой чертой, дни сливались друг с другом при скролле).
+   Имя дня недели — крупно, шрифтом бренда; «День N» — бейджем справа. */
+.shop-day { margin-top: 0.8rem; padding: 0.85rem 0.9rem 0.95rem; border: 1px solid var(--border-color);
+    border-radius: 14px; background: var(--bg-pure); }
+.shop-day:first-child { margin-top: 0; }
+.shop-day__h { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem;
+    padding-bottom: 0.55rem; margin-bottom: 0.15rem; border-bottom: 1px solid var(--border-color); }
+.shop-day__dow { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700;
+    line-height: 1.1; color: var(--text-main); }
+.shop-day__num { flex: none; font-size: 0.68rem; font-weight: 700; color: var(--sage-medium);
+    background: var(--sage-soft); border-radius: 999px; padding: 0.22rem 0.6rem; white-space: nowrap; }
+/* Приём пищи — бейдж слота (цветной, в глаза) + имя блюда рядом, вместо
+   одной серой строки «Обед — Куриное филе», где слот терялся среди букв. */
+.shop-meal { padding-top: 0.6rem; }
+.shop-meal:first-of-type { padding-top: 0; }
+.shop-meal + .shop-meal { border-top: 1px solid var(--border-color); }
+.shop-meal__h { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 0.5rem; }
+.shop-meal__slot { flex: none; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.03em;
+    text-transform: uppercase; color: var(--sage-medium); background: var(--sage-soft);
+    border-radius: 999px; padding: 0.2rem 0.55rem; }
+.shop-meal__h i { flex: none; font-style: normal; font-weight: 600; font-size: 0.7rem; color: var(--gold-hover); }
+.shop-meal__list { list-style: none; margin: 0.35rem 0 0; padding: 0; }
+.shop-meal__list li { position: relative; padding: 0.14rem 0 0.14rem 0.85rem;
+    font-size: 0.8rem; line-height: 1.45; color: var(--text-main); }
+.shop-meal__list li::before { content: ''; position: absolute; left: 0; top: 0.66em;
+    width: 5px; height: 5px; border-radius: 50%; background: var(--sage); }
+.shop-meal--free .shop-meal__slot { color: var(--gold-hover); background: var(--gold-soft); }
+
+/* ─── Финал программы ────────────────────────────────────── */
+.finish-banner {
+    background: linear-gradient(135deg, var(--gold), var(--gold-hover)); color: #1a1f1c;
+    border-radius: 20px; padding: 1.8rem 1.5rem; text-align: center; margin-bottom: 1.2rem; box-shadow: var(--shadow-gold);
+}
+.finish-banner .emo { font-size: 2.4rem; }
+.finish-banner h2 { font-size: 1.6rem; margin: 0.4rem 0 0.3rem; }
+.finish-banner p { font-size: 0.95rem; opacity: 0.85; }
+/* «Что дальше» после финала: поддерживающий рацион + отзыв Кате */
+.finish-next {
+    background: var(--bg-pure); border: 1px solid var(--border-color); border-radius: 20px;
+    padding: 1.4rem 1.3rem 1.5rem; margin-bottom: 1.8rem; box-shadow: var(--shadow-card);
+}
+.finish-next h3 { font-size: 1.12rem; margin: 0 0 0.7rem; }
+.finish-next ul { list-style: none; margin: 0 0 1.2rem; padding: 0; }
+.finish-next li { display: flex; gap: 0.6rem; padding: 0.45rem 0; font-size: 0.88rem; line-height: 1.5; color: var(--text-main); }
+.finish-next li svg { flex: none; width: 18px; height: 18px; margin-top: 0.15rem; color: var(--sage); }
+.finish-next__sub { margin: 0.7rem 0 0; text-align: center; font-size: 0.8rem; color: var(--text-muted); }
+
+/* ─── Недельное взвешивание (по желанию) + мини-график веса ─── */
+.weekly-card {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem;
+    background: var(--bg-pure); border: 1px solid var(--border-color); border-radius: 16px;
+    padding: 1rem 1.1rem; margin-bottom: 1.2rem; box-shadow: var(--shadow-soft);
+}
+.weekly-card__ic { flex: none; width: 34px; height: 34px; color: var(--sage); }
+.weekly-card__ic svg { width: 100%; height: 100%; display: block; }
+.weekly-card__txt { flex: 1 1 12rem; min-width: 0; }
+.weekly-card__txt h3 { font-size: 1rem; margin: 0 0 0.15rem; }
+.weekly-card__txt p { margin: 0; font-size: 0.8rem; line-height: 1.45; color: var(--text-muted); }
+.weekly-card__btns { display: flex; align-items: center; gap: 0.9rem; width: 100%; }
+.weekly-card__btns .btn { flex: 1 1 auto; }
+.weekly-card__later { flex: none; border: 0; background: none; padding: 0.4rem 0.2rem; font: inherit;
+    font-size: 0.82rem; font-weight: 600; color: var(--text-muted); text-decoration: underline;
+    text-underline-offset: 2px; cursor: pointer; min-height: 48px; }
+.weight-chart {
+    background: var(--bg-pure); border: 1px solid var(--border-color); border-radius: 16px;
+    padding: 0.9rem 1rem 0.6rem; margin-bottom: 1.2rem; box-shadow: var(--shadow-soft);
+}
+.weight-chart__head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem;
+    font-size: 0.84rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem; }
+.weight-chart__head b { font-size: 0.95rem; font-weight: 700; color: var(--text-main); white-space: nowrap; }
+.weight-chart__head b.down { color: var(--sage-medium); }
+.weight-chart__head b.up { color: var(--gold-hover); }
+.weight-chart svg { display: block; width: 100%; height: auto; }
+.wc-line { fill: none; stroke: var(--sage); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.wc-dot { fill: var(--bg-pure); stroke: var(--sage); stroke-width: 2; }
+.wc-dot--last { fill: var(--gold); stroke: var(--gold-hover); }
+.wc-val { font: 700 10px var(--font-ui); fill: var(--text-main); text-anchor: middle; }
+.wc-lbl { font: 600 8.5px var(--font-ui); fill: var(--text-muted); text-anchor: middle; }
+
+/* ─── Тарифы доступа (M5): баннер, стена пробного, экран ожидания ─── */
+.tier-note {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 0.4rem 1rem; background: var(--gold-soft); border-radius: 14px;
+    padding: 0.85rem 1.1rem; margin-bottom: 1.2rem; font-size: 0.9rem; color: var(--text-main);
+}
+.tier-note a { color: var(--gold-hover); font-weight: 700; white-space: nowrap; }
+@media (hover: hover) { .tier-note a:hover { text-decoration: underline; } }
+.upsell-card {
+    background: var(--bg-pure); border: 1.5px solid var(--gold-soft); border-radius: 20px;
+    padding: 1.8rem 1.5rem; text-align: center; margin-bottom: 1.8rem; box-shadow: var(--shadow-card);
+}
+.upsell-card .emo { font-size: 2.4rem; }
+.upsell-card h2 { font-size: 1.5rem; margin: 0.4rem 0 0.3rem; }
+.upsell-card p { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.2rem; }
+.pending-emo { font-size: 2.8rem; margin-top: 0.6rem; }
+.auth-card .btn--block + .btn--block { margin-top: 0.6rem; }
+/* Тренировка под замком (тариф «питание») */
+.workout-locked .video-soon svg { display: block; margin: 0 auto 0.4rem; color: var(--text-on-dark-muted); }
+.workout-locked .video-soon .btn { margin-top: 0.9rem; }
+/* Закрытый день вне тарифа (стена пробного) */
+.day-locked--upsell .btn { margin-bottom: 0.2rem; }
+.back-link--center { justify-content: center; margin: 1rem 0 0; }
+
+/* ─── Страница дня ───────────────────────────────────────── */
+.day-page { padding: 1.2rem 0 3rem; }
+.day-page.has-cta { padding-bottom: 110px; }
+.back-link { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1rem; min-height: 32px; }
+@media (hover: hover) { .back-link:hover { color: var(--gold-hover); } }
+.day-header { margin-bottom: 1.4rem; }
+.day-header__eyebrow { font-size: 0.74rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--gold-hover); margin-bottom: 0.5rem; font-weight: 700; }
+.day-header h1 { font-size: 1.9rem; margin-bottom: 0.5rem; }
+.day-header p { color: var(--text-muted); font-size: 0.95rem; }
+.done-pill { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--sage-soft); color: var(--sage-medium); font-size: 0.8rem; font-weight: 700; padding: 0.4rem 0.9rem; border-radius: 999px; margin-top: 0.8rem; }
+@media (min-width: 720px) { .day-header h1 { font-size: 2.3rem; } }
+
+.day-block { background: var(--bg-pure); border-radius: 18px; box-shadow: var(--shadow-card); padding: 1.3rem; margin-bottom: 1.1rem; }
+@media (min-width: 720px) { .day-block { padding: 1.8rem; } }
+.day-block__head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1.1rem; }
+.day-block__head .ic { width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: var(--gold-soft); color: var(--gold-hover); display: grid; place-items: center; }
+.day-block__head .ic svg { width: 21px; height: 21px; }
+.day-block__head h2 { font-size: 1.25rem; }
+.day-block__head .sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+/* Экран закрытого дня */
+.day-locked { text-align: center; padding: 2.6rem 1.3rem; }
+.day-locked__icon { margin-bottom: 0.6rem; color: var(--state-locked); }
+.day-locked h2 { margin-bottom: 0.5rem; }
+.day-locked p { color: var(--text-muted); margin-bottom: 1.4rem; }
+
+.video-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: var(--bg-deep); }
+.video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* Заглушка, пока реального видео ещё нет (Фаза 1) */
+.video-frame--soon { display: grid; place-items: center; background: linear-gradient(135deg, var(--sage-deep), var(--bg-elevated)); }
+.video-soon { text-align: center; color: var(--text-on-dark-muted); padding: 1rem; }
+.video-soon .emo { font-size: 2rem; display: block; margin-bottom: 0.4rem; }
+.video-soon p { font-size: 0.92rem; }
+
+/* План питания */
+.meals { display: grid; gap: 0.7rem; }
+.meal { display: grid; grid-template-columns: auto 1fr auto; gap: 0.7rem 0.9rem; align-items: start; padding: 0.9rem; border: 1px solid var(--border-color); border-radius: 13px; background: var(--bg-milk); }
+.meal__when { font-weight: 700; font-size: 0.8rem; color: var(--sage-medium); padding-top: 0.1rem; }
+.meal__body { grid-column: 2; }
+.meal__body h4 { font-size: 0.96rem; margin-bottom: 0.15rem; }
+.meal__body p { font-size: 0.84rem; color: var(--text-muted); line-height: 1.45; }
+.meal__kcal { grid-column: 3; grid-row: 1; font-size: 0.78rem; font-weight: 700; color: var(--gold-hover); white-space: nowrap; }
+.meals__total { text-align: right; margin-top: 0.8rem; font-size: 0.9rem; color: var(--text-muted); }
+.meals__total b { color: var(--text-main); }
+
+/* Личная норма по Миффлину (бюджет дня) */
+.nutri-norm { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem 1rem;
+    padding: 0.85rem 1rem; margin-bottom: 1rem; border-radius: 14px; background: var(--gold-soft); border: 1px solid var(--champagne); }
+.nutri-norm__kcal { font-size: 0.92rem; color: var(--gold-hover); }
+.nutri-norm__kcal b { font-family: var(--font-display); font-size: 1.7rem; line-height: 1; color: var(--text-main); margin-right: 0.25rem; }
+.nutri-norm__kcal span { display: block; font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem; }
+.nutri-norm__macros { display: flex; gap: 0.5rem; }
+.nutri-norm__macros span { background: var(--bg-pure); border-radius: 10px; padding: 0.35rem 0.55rem; font-size: 0.82rem; font-weight: 700; color: var(--text-main); white-space: nowrap; }
+.nutri-norm__macros i { font-style: normal; color: var(--sage-medium); margin-right: 0.25rem; font-weight: 700; }
+.nutri-norm--empty { display: block; text-decoration: none; font-size: 0.86rem; font-weight: 600; color: var(--gold-hover); }
+.nutri-norm--empty:active { background: var(--champagne); }
+
+/* Фолбэк «меню не загрузилось» — мягкая карточка с кнопкой «Обновить» */
+.nutri-reload { text-align: center; padding: 0.9rem 0.9rem 1rem; margin-bottom: 0.9rem;
+    border-radius: 13px; background: var(--bg-milk); border: 1px solid var(--border-color); }
+.nutri-reload p { margin: 0 0 0.7rem; font-size: 0.86rem; color: var(--text-muted); line-height: 1.4; }
+
+/* Баннер «сегодня читмил» */
+.nutri-cheat { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 0.9rem; margin-bottom: 0.9rem;
+    border-radius: 13px; background: var(--bg-milk); border: 1px dashed var(--gold); font-size: 0.84rem; color: var(--text-main); line-height: 1.4; }
+.nutri-cheat .emo { font-size: 1.1rem; }
+/* Вариант «тренировка самостоятельности» (дни свободных сборок) — сейдж вместо золота */
+.nutri-cheat--self { border-color: var(--sage); }
+
+/* Бейджи приёмов пищи (слот 20% / читмил / собери сам) — цвет по типу.
+   Используются свёрнутой сводкой блюда (.meal-sum__tag). */
+.tag--treat { background: var(--gold-soft); color: var(--gold-hover); }
+.tag--cheat { background: var(--danger-soft); color: var(--danger); }
+.tag--diy { background: var(--sage-soft); color: var(--sage-medium); }
+
+/* Б/Ж/У + ккал приёма пищи */
+.meal__body p { color: var(--text-main); }
+.macros { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.55rem; }
+.mac { display: inline-flex; align-items: center; gap: 0.22rem; background: var(--bg-pure); border: 1px solid var(--border-color);
+    border-radius: 8px; padding: 0.18rem 0.42rem; font-size: 0.76rem; font-weight: 700; color: var(--text-main); font-variant-numeric: tabular-nums; line-height: 1; }
+.mac i { font-style: normal; font-weight: 800; font-size: 0.72rem; }
+.mac .mp { color: var(--macro-protein); }
+.mac .mf { color: var(--macro-fat); }
+.mac .mc { color: var(--macro-carb); }
+.mac--k { background: var(--gold-soft); border-color: var(--champagne); color: var(--gold-hover); }
+.macros--free { margin-top: 0.5rem; font-size: 0.78rem; font-style: italic; color: var(--text-muted); }
+
+/* «Собери по Конструктору ↓» — кнопка прыжка к таблицам (дни свободной сборки) */
+.con-jump { margin-top: 0.55rem; display: inline-flex; align-items: center; gap: 0.3rem; min-height: 40px;
+    background: var(--sage-soft); color: var(--sage-medium); border: 1px solid var(--sage); border-radius: 10px;
+    padding: 0.4rem 0.75rem; font-family: var(--font-ui); font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: var(--transition); }
+.con-jump:active { background: var(--champagne); }
+
+/* Бюджет дня: сколько съедено и сколько ещё можно (идея Кати) */
+.nutri-budget { margin-top: 0.6rem; padding: 0.8rem 0.95rem; border-radius: 13px; background: var(--bg-milk); border: 1px solid var(--border-color); }
+.nutri-budget__head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; font-size: 0.84rem; color: var(--text-muted); }
+.nutri-budget__head b { font-size: 0.92rem; font-weight: 700; color: var(--text-main); white-space: nowrap; }
+.nutri-budget__head b.ok { color: var(--sage-medium); }
+.nutri-budget__head b.over { color: var(--gold-hover); }
+.nutri-budget__bar { margin: 0.3rem 0 0; height: 9px; border-radius: 999px; background: var(--gold-soft); overflow: hidden; }
+.nutri-budget__bar i { display: block; height: 100%; border-radius: 999px; background: var(--sage); transition: width 0.5s var(--ease-out); }
+/* Шкалы бюджета «съедено X из Y»: калории + Б/Ж/У (10.07.2026 — полноценный
+   бюджет: стремимся заполнить все четыре к концу дня) */
+.bud { margin-top: 0.6rem; }
+.bud__t { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem;
+    font-size: 0.8rem; color: var(--text-main); }
+.bud__t span { font-weight: 600; }
+.bud__t b { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bud__t em { font-style: normal; font-weight: 500; font-size: 0.72rem; color: var(--text-muted); }
+.bud__t i { font-style: normal; font-weight: 800; color: var(--sage-medium); }
+.bud--done .nutri-budget__bar i { background: var(--sage-medium); }
+.bud--over .nutri-budget__bar i { background: var(--gold); }
+.bud--over .bud__t b { color: var(--gold-hover); }
+.nutri-budget--empty { display: block; text-decoration: none; font-size: 0.84rem; font-weight: 600; color: var(--gold-hover); }
+.nutri-budget--empty:active { background: var(--champagne); }
+.nutri-total--partial { background: var(--sage-medium); }
+
+/* ── Раскрывашка-подсказка «Как это работает?» — вся обучающая вода по тапу
+   (просьба владельца 10.07.2026: минимализм по умолчанию, ликбез для новичка) ── */
+.qa { margin-top: 0.55rem; }
+.qa__q { list-style: none; display: inline-flex; align-items: center; gap: 0.45rem; min-height: 48px;
+    padding: 0.5rem 0.95rem 0.5rem 0.5rem; border: 1px dashed var(--border-focus); border-radius: 999px;
+    background: var(--bg-pure); font-size: 0.78rem; font-weight: 600; color: var(--sage-medium);
+    cursor: pointer; transition: var(--transition); }
+.qa__q::-webkit-details-marker { display: none; }
+.qa__ic { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%;
+    background: var(--sage-soft); color: var(--sage-medium); font-weight: 800; font-size: 0.76rem; }
+.qa[open] > .qa__q { border-style: solid; border-color: var(--sage); background: var(--sage-soft); }
+.qa__body { margin-top: 0.5rem; padding: 0.8rem 0.9rem; border-radius: 12px;
+    background: var(--bg-pure); border: 1px solid var(--border-color); }
+.qa__body p { margin: 0; font-size: 0.8rem; line-height: 1.55; color: var(--text-main); }
+.qa__body p + p { margin-top: 0.55rem; }
+/* Внутри шторки Конструктора — отступ от краёв */
+.qa-wrap { padding: 0 1rem 0.4rem; }
+.qa-wrap .qa { margin-top: 0; }
+
+/* Итог за день (Б/Ж/У/ккал) — тёмная сейдж-плашка */
+.nutri-total { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.3rem 0.8rem;
+    margin-top: 0.9rem; padding: 0.7rem 0.95rem; background: var(--sage-deep); color: var(--text-on-dark); border-radius: 13px; }
+.nutri-total__lbl { font-size: 0.82rem; font-weight: 700; }
+.nutri-total__nums { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; font-size: 0.82rem; }
+.nutri-total__nums b { font-family: var(--font-display); font-size: 1.2rem; color: #fff; }
+.nutri-total__nums i { font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+.nutri-total__nums em { font-style: normal; color: var(--text-on-dark-muted); margin-right: 0.18rem; }
+.nutri-total__nums small { width: 100%; font-size: 0.7rem; color: var(--text-on-dark-muted); }
+
+/* Мастер-Конструктор 80/20 (раскрывающийся) */
+.con { margin-top: 1rem; border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-milk); overflow: hidden; }
+.con > summary { list-style: none; cursor: pointer; padding: 0.95rem 1rem; min-height: 52px; display: flex; align-items: center;
+    font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
+.con > summary::-webkit-details-marker { display: none; }
+.con > summary::after { content: ''; margin-left: auto; width: 9px; height: 9px; border-right: 2px solid var(--sage-medium);
+    border-bottom: 2px solid var(--sage-medium); transform: rotate(45deg); transition: var(--transition); }
+.con[open] > summary::after { transform: rotate(-135deg); }
+.con__intro { font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; padding: 0 1rem; margin: 0 0 0.7rem; }
+/* Группы Конструктора — свёрнутые шторки (вместо одной простыни из 4 таблиц) */
+.con-g { margin: 0 0.6rem; border-top: 1px solid var(--border-color); }
+.con-g:first-of-type { border-top: none; }
+.con-group__h { display: flex; flex-wrap: wrap; align-items: center; gap: 0.1rem 0.4rem; padding: 0.5rem 0.4rem 0.4rem; font-weight: 700; font-size: 0.86rem; color: var(--sage-medium); }
+/* Подзаголовок — всегда своей строкой: иначе короткие («Белки») влезали в одну
+   строку, длинные переносились, и заголовки групп получались разной высоты */
+.con-group__h span { flex-basis: 100%; font-weight: 500; font-size: 0.72rem; color: var(--text-muted); }
+summary.con-group__h { list-style: none; cursor: pointer; position: relative; min-height: 52px; padding-right: 1.7rem; }
+summary.con-group__h::-webkit-details-marker { display: none; }
+summary.con-group__h::after { content: ''; position: absolute; right: 0.6rem; top: calc(50% - 6px); width: 8px; height: 8px;
+    border-right: 2px solid var(--sage-medium); border-bottom: 2px solid var(--sage-medium);
+    transform: rotate(45deg); transition: var(--transition); }
+.con-g[open] > summary.con-group__h::after { top: calc(50% - 3px); transform: rotate(-135deg); }
+.con-g .con-list { margin-bottom: 0.55rem; }
+.con-g--treat summary.con-group__h { color: var(--gold-hover); }
+.con-g--treat summary.con-group__h::after { border-color: var(--gold-hover); }
+/* «Свой продукт»: ручной ввод ккал/Б-Ж-У в дневной счёт */
+/* Форма живёт в своей шторке .con (не в группе .con-g) — отступы от краёв её */
+.con-custom { padding: 0 1rem 0.95rem; }
+.con-custom .cc-name { width: 100%; padding: 0.7rem 0.85rem; font: inherit; font-size: 0.9rem;
+    border: 1.5px solid var(--border-color); border-radius: 12px; background: var(--bg-milk); transition: var(--transition); }
+.con-custom .cc-name:focus { outline: none; border-color: var(--gold); background: var(--bg-pure); box-shadow: 0 0 0 4px var(--gold-soft); }
+.cc-nums { display: flex; gap: 0.5rem; margin-top: 0.55rem; }
+.cc-nums label { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 0.2rem;
+    font-size: 0.68rem; font-weight: 600; color: var(--text-muted); }
+.cc-nums input { width: 100%; min-height: 46px; padding: 0.45rem 0.5rem; font: inherit; font-size: 0.95rem;
+    text-align: center; border: 1.5px solid var(--border-color); border-radius: 12px; background: var(--bg-milk);
+    transition: var(--transition); -moz-appearance: textfield; }
+.cc-nums input::-webkit-outer-spin-button, .cc-nums input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.cc-nums input:focus { outline: none; border-color: var(--gold); background: var(--bg-pure); box-shadow: 0 0 0 4px var(--gold-soft); }
+.cc-hint { margin: 0.5rem 0 0; font-size: 0.72rem; line-height: 1.45; color: var(--text-muted); }
+.con-custom .sheet-err { margin: 0.5rem 0 0; }
+.cc-add { width: 100%; margin-top: 0.65rem; min-height: 48px; }
+.con__intro--treat { padding: 0 0.4rem; }
+/* Строки Конструктора — карточки одной высоты вместо таблицы: имя + ккал на
+   первой строке, вес — отдельной строкой во всю ширину. (Раньше вес, пометка
+   «сырой/сухой», готовый вес и ккал стопкой теснились в узкой правой колонке —
+   строки прыгали по высоте от 1 до 4 ярусов, список выглядел рваным.) */
+.con-list { font-size: 0.8rem; }
+.con-item { padding: 0.5rem 0.4rem 0.55rem; border-top: 1px solid var(--border-color); }
+.con-item:first-child { border-top: none; }
+.ci-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.7rem; }
+.ci-name { min-width: 0; font-weight: 600; color: var(--text-main); }
+.ci-kcal { flex: none; font-size: 0.75rem; font-weight: 700; color: var(--gold-hover); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ci-w { margin-top: 0.15rem; font-size: 0.75rem; color: var(--text-main); font-variant-numeric: tabular-nums; }
+.ci-w i { font-style: normal; font-size: 0.68rem; font-weight: 600; color: var(--sage-medium); margin-left: 0.1rem; }
+.ci-wsub { color: var(--text-muted); }
+
+/* Кликабельная строка Конструктора (добор в дневной счёт) + значок «＋» */
+.con-row { cursor: pointer; transition: background 0.15s var(--ease-out); }
+@media (hover: hover) { .con-row:hover { background: var(--gold-soft); } }
+.con-row:active, .con-row--added { background: var(--champagne); }
+.ci-kcal .con-add { margin-left: 0.2rem; color: var(--sage-medium); font-weight: 800; }
+
+/* План питания — блюда как раскрывающиеся карточки (аккордеон вниз) */
+.meal-acc { border: 1px solid var(--border-color); border-radius: 13px; background: var(--bg-milk); overflow: hidden; }
+.meal-acc--treat { border-color: var(--champagne); }
+.meal-acc--cheat { border-color: var(--danger); background: var(--danger-soft); }
+.meal-acc--diy { border-style: dashed; }
+.meal-sum { list-style: none; cursor: pointer; position: relative; display: flex; align-items: center;
+    justify-content: space-between; gap: 0.6rem; padding: 0.95rem 2.3rem 0.95rem 1rem; min-height: 60px; }
+.meal-sum::-webkit-details-marker { display: none; }
+.meal-sum::after { content: ''; position: absolute; right: 1.05rem; top: calc(50% - 6px); width: 8px; height: 8px;
+    border-right: 2px solid var(--sage-medium); border-bottom: 2px solid var(--sage-medium);
+    transform: rotate(45deg); transition: var(--transition); }
+.meal-acc[open] .meal-sum::after { top: calc(50% - 3px); transform: rotate(-135deg); }
+/* Слот — единственный текст свёрнутой строки: крупно, фирменным шрифтом
+   (названия блюд из свёрнутого вида убраны — обрезались, просьба владельца) */
+.meal-sum__when { flex: 1; min-width: 0; font-family: var(--font-display); font-weight: 600;
+    font-size: 1.22rem; line-height: 1.15; color: var(--text-main); }
+.meal-sum__meta { display: flex; align-items: center; flex: none; gap: 0.4rem; }
+.meal-sum__tag { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+    padding: 0.2rem 0.45rem; border-radius: 999px; }
+.meal-sum__k { font-size: 0.82rem; font-weight: 700; color: var(--gold-hover); }
+/* Раскрытое блюдо: состав столбиком, первая строка = само блюдо */
+.meal-exp { padding: 0 1rem 1.05rem; }
+.meal-exp__list { list-style: none; margin: 0; padding: 0.45rem 0 0; border-top: 1px solid var(--border-color); }
+.meal-exp__list li { position: relative; padding: 0.4rem 0 0.4rem 1.05rem;
+    font-size: 0.88rem; line-height: 1.45; color: var(--text-main); }
+.meal-exp__list li::before { content: ''; position: absolute; left: 0.1rem; top: 0.92em; width: 5px; height: 5px;
+    border-radius: 50%; background: var(--sage); }
+.meal-exp__list li:first-child { font-weight: 600; }
+.meal-exp__text { font-size: 0.88rem; color: var(--text-main); line-height: 1.5; margin: 0; padding-top: 0.8rem; border-top: 1px solid var(--border-color); }
+.meal-acc--cheat .meal-exp__text { border-top-color: rgba(122, 92, 60, 0.18); }
+.meal-exp .macros { margin-top: 0.7rem; }
+.meal-exp .con-jump { margin-top: 0.7rem; }
+
+/* Добор из Конструктора — чипы добавленных позиций (эфемерно на день) */
+.nutri-added { margin-top: 0.65rem; }
+.nutri-added__head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.45rem; }
+.nutri-added__head span { font-size: 0.8rem; font-weight: 700; color: var(--sage-medium); }
+.nutri-added__reset { border: 0; background: none; padding: 0; font: inherit; font-size: 0.76rem; font-weight: 600;
+    color: var(--gold-hover); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.nutri-added__chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.add-chip { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 36px; padding: 0.3rem 0.6rem;
+    border: 1px solid var(--sage); border-radius: 999px; background: var(--sage-soft); color: var(--sage-deep);
+    font-family: var(--font-ui); font-size: 0.76rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
+.add-chip span { color: var(--sage-medium); font-weight: 800; }
+.add-chip:active { background: var(--champagne); }
+
+/* ── Замена блюда (чипы быстрых замен + шторка-визард «Собери замену»):
+   блюдо вычитается из счёта, вместо него — собранная замена ── */
+.tag--repl { background: var(--champagne); color: var(--gold-hover); }
+.meal-acc--replaced { border-color: var(--gold-hover); }
+.meal-repl { margin-top: 0.6rem; padding: 0.7rem 0.8rem 0.55rem; background: var(--gold-soft); border-radius: 12px; }
+.meal-repl__h { font-size: 0.8rem; font-weight: 700; color: var(--gold-hover); margin-bottom: 0.15rem; }
+.meal-repl__hint { margin: 0.45rem 0 0; font-size: 0.74rem; line-height: 1.45; color: var(--sage-deep); }
+.meal-repl__restore { margin-top: 0.35rem; border: 0; background: none; padding: 0.2rem 0; font: inherit;
+    font-size: 0.78rem; font-weight: 700; color: var(--sage-medium); text-decoration: underline;
+    text-underline-offset: 2px; cursor: pointer; min-height: 40px; }
+/* Состав замены — строки с граммовкой (что и сколько взвешивать) + свои Б/Ж/У */
+.repl-list { list-style: none; margin: 0; padding: 0; }
+.repl-list li { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0; min-height: 44px; }
+.repl-list li + li { border-top: 1px solid rgba(201, 169, 110, 0.25); }
+.repl-list .rr-n { flex: 1 1 auto; min-width: 0; font-size: 0.85rem; color: var(--text-main); }
+.repl-list .rr-n em { display: block; margin-top: 0.1rem; font-style: normal; font-size: 0.74rem; color: var(--text-muted); }
+.repl-list .rr-k { flex: none; font-size: 0.76rem; font-weight: 700; color: var(--gold-hover);
+    white-space: nowrap; font-variant-numeric: tabular-nums; }
+.repl-list .rr-x { flex: none; width: 40px; height: 40px; margin-right: -0.4rem; border: 0; background: none;
+    font-size: 0.85rem; color: var(--text-muted); cursor: pointer; border-radius: 10px; }
+.repl-list .rr-x:active { background: var(--champagne); }
+.macros--repl { margin-top: 0.45rem; }
+
+/* Вспышка плашки итога после добора/замены (скролл приводит взгляд к счёту) */
+@keyframes nutriFlash { 0%, 100% { box-shadow: none; } 30% { box-shadow: 0 0 0 4px var(--champagne); } }
+.nutri-total--flash { animation: nutriFlash 1.1s var(--ease-out); }
+/* Вспышка карточки блюда после сборки замены в визарде (scrollToMeal) */
+.meal-acc--flash { animation: nutriFlash 1.1s var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { .nutri-total--flash { animation: none; } }
+
+/* ── Галочка «съедено» на карточке блюда (кружок слева в свёрнутой строке) ── */
+.meal-eat { flex: none; width: 28px; height: 28px; padding: 0; border-radius: 50%; position: relative;
+    border: 2px solid var(--border-color); background: var(--bg-pure); color: transparent;
+    display: grid; place-items: center; cursor: pointer; transition: var(--transition); }
+.meal-eat::before { content: ''; position: absolute; top: -14px; bottom: -14px; left: -12px; right: -6px;
+    border-radius: 50%; } /* тап-зона ≥ 48px, не наезжая на текст справа */
+.meal-eat svg { width: 15px; height: 15px; display: block; }
+.meal-eat.is-on { background: var(--sage); border-color: var(--sage); color: #fff; }
+.meal-eat--free { visibility: hidden; } /* читмил/«собери сам»: кружка нет, выравнивание общее */
+.meal-acc--eaten { border-color: var(--sage); }
+.meal-acc--eaten .meal-sum__when { color: var(--text-muted); text-decoration: line-through; }
+
+/* Свёрнутая строка: слот + короткое название блюда (скрывается при раскрытии) */
+
+/* Кнопка «Рецепт» в раскрытом блюде — открывает шторку с пошаговым приготовлением */
+.meal-recipe { margin: 0.7rem 0.5rem 0 0; display: inline-flex; align-items: center; gap: 0.45rem; min-height: 48px;
+    padding: 0.5rem 1.05rem; border: 1px solid var(--gold); border-radius: 999px;
+    background: var(--gold-soft); color: var(--gold-hover); font-family: var(--font-ui);
+    font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: var(--transition); }
+.meal-recipe svg { width: 16px; height: 16px; flex: none; }
+.meal-recipe:active { background: var(--champagne); }
+
+/* ── «Что готовить завтра» — подглядка меню следующего дня ── */
+.tmrw { margin-top: 0.7rem; border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-milk); overflow: hidden; }
+.tmrw > summary { list-style: none; cursor: pointer; min-height: 52px; padding: 0.9rem 1rem; display: flex; align-items: center; gap: 0.55rem;
+    font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
+.tmrw > summary::-webkit-details-marker { display: none; }
+.tmrw > summary .ic { flex: none; width: 20px; height: 20px; color: var(--sage-medium); }
+.tmrw > summary .ic svg { width: 100%; height: 100%; display: block; }
+.tmrw > summary::after { content: ''; flex: none; margin-left: auto; width: 9px; height: 9px; border-right: 2px solid var(--sage-medium);
+    border-bottom: 2px solid var(--sage-medium); transform: rotate(45deg); transition: var(--transition); }
+.tmrw[open] > summary::after { transform: rotate(-135deg); }
+.tmrw__body { padding: 0 1rem 0.9rem; }
+.tmrw__list { list-style: none; margin: 0; padding: 0; }
+.tmrw__list li { display: flex; align-items: baseline; gap: 0.6rem; padding: 0.45rem 0; font-size: 0.84rem; }
+.tmrw__list li + li { border-top: 1px solid var(--border-color); }
+.tmrw__slot { flex: none; width: 4.6rem; font-weight: 700; font-size: 0.74rem; color: var(--sage-medium); }
+.tmrw__name { flex: 1 1 auto; min-width: 0; color: var(--text-main); }
+.tmrw__k { flex: none; font-size: 0.74rem; font-weight: 700; color: var(--gold-hover); white-space: nowrap; }
+/* Продукты на завтра: ключевые продукты дня N+1 с сырым/сухим весом */
+.tmrw__shop { margin-top: 0.8rem; padding: 0.7rem 0.85rem 0.75rem; border-radius: 12px;
+    background: var(--bg-pure); border: 1px dashed var(--border-color); }
+.tmrw__shop-h { margin-bottom: 0.3rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--sage-medium); }
+.tmrw__shop ul { list-style: none; margin: 0; padding: 0; }
+.tmrw__shop li { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem;
+    padding: 0.32rem 0; font-size: 0.84rem; color: var(--text-main); }
+.tmrw__shop li + li { border-top: 1px solid var(--border-color); }
+.tmrw__shop li b { flex: none; font-weight: 700; color: var(--sage-deep);
+    font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tmrw__shop-note { margin: 0.5rem 0 0; font-size: 0.72rem; line-height: 1.45; color: var(--text-muted); }
+.tmrw__tip { margin: 0.7rem 0 0; padding: 0.55rem 0.7rem; border-radius: 10px; background: var(--sage-soft);
+    font-size: 0.76rem; line-height: 1.45; color: var(--sage-deep); }
+
+/* Привычки */
+.habits { display: grid; gap: 0.55rem; }
+.habit { display: flex; align-items: center; gap: 0.8rem; padding: 0.95rem 1rem; min-height: 56px; border: 1px solid var(--border-color); border-radius: 13px; cursor: pointer; transition: var(--transition); user-select: none; }
+/* Пройденный день: задачи зафиксированы — только просмотр */
+.habits--done .habit { cursor: default; opacity: 0.85; }
+.habit:active { background: var(--bg-milk); }
+.habit input { display: none; }
+.habit .box { width: 26px; height: 26px; flex-shrink: 0; border-radius: 8px; border: 2px solid var(--border-color); display: grid; place-items: center; color: #fff; transition: var(--transition); }
+.habit input:checked + .box { background: var(--sage); border-color: var(--sage); }
+.habit input:checked + .box::after { content: '✓'; font-size: 0.9rem; font-weight: 700; }
+.habit .label { font-size: 0.96rem; }
+.habit input:checked ~ .label { color: var(--text-muted); text-decoration: line-through; }
+/* Стрик «🔥 N дн. подряд» — inline-block, чтобы line-through отмеченной задачи его не зачёркивал */
+.habit-streak { display: inline-block; margin-left: 0.45rem; font-size: 0.72rem; font-weight: 700;
+    color: var(--gold-hover); white-space: nowrap; }
+@media (hover: hover) { .habit:hover { border-color: var(--gold); } }
+
+/* Навигация по дням */
+.day-nav { display: flex; justify-content: space-between; gap: 0.8rem; margin-top: 1.4rem; }
+.day-nav .btn { flex: 1; }
+
+/* ─── Залипающая кнопка «Завершить день» ─────────────────── */
+.day-cta {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    padding: 0.8rem 16px; padding-bottom: calc(0.8rem + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, var(--bg-milk) 78%, rgba(247,245,240,0));
+}
+.day-cta .container { max-width: var(--container); padding: 0; }
+.day-cta .btn { width: 100%; box-shadow: 0 -2px 20px rgba(201,169,110,0.25), var(--shadow-gold); }
+@media (min-width: 720px) {
+    .day-cta { background: rgba(247,245,240,0.9); backdrop-filter: blur(12px); border-top: 1px solid var(--border-color); padding: 0.9rem 24px; padding-bottom: calc(0.9rem + env(safe-area-inset-bottom)); }
+    .day-cta .container { padding: 0 24px; }
+}
+
+/* ─── Шторка / модалка (bottom sheet) ────────────────────── */
+.sheet-overlay {
+    position: fixed; inset: 0; z-index: 90; display: flex; align-items: flex-end; justify-content: center;
+    background: rgba(20,24,21,0.55); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.sheet-overlay.open { opacity: 1; pointer-events: auto; }
+.sheet {
+    width: 100%; max-width: 520px; background: var(--bg-pure);
+    border-radius: 24px 24px 0 0; box-shadow: 0 -12px 44px rgba(0,0,0,0.22);
+    padding: 1.2rem 1.3rem; padding-bottom: calc(1.6rem + env(safe-area-inset-bottom));
+    transform: translateY(101%); transition: transform 0.38s var(--ease-spring);
+    max-height: 92svh; overflow-y: auto;
+}
+.sheet-overlay.open .sheet { transform: translateY(0); }
+.sheet__grab { width: 42px; height: 4px; border-radius: 2px; background: var(--border-color); margin: 0 auto 1rem; }
+.sheet__close { position: absolute; top: 1rem; right: 1.1rem; width: 34px; height: 34px; border: none; background: var(--bg-milk); border-radius: 50%; font-size: 1.1rem; color: var(--text-muted); cursor: pointer; }
+.sheet h2 { font-size: 1.5rem; margin-bottom: 0.4rem; }
+.sheet > p, .sheet .sheet-sub { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 0.4rem; }
+.sheet-step { animation: sheetFade 0.3s ease; }
+@keyframes sheetFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (min-width: 560px) {
+    .sheet-overlay { align-items: center; }
+    .sheet { border-radius: 24px; padding: 1.8rem; max-height: 88svh; }
+    .sheet__grab { display: none; }
+}
+
+/* ── Шторка «Рецепт» (пошаговое приготовление блюда дня) ── */
+.rec-slot { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--sage-medium); margin-bottom: 0.2rem; }
+.sheet--recipe h2 { font-size: 1.35rem; line-height: 1.25; padding-right: 2.2rem; }
+.rec-h { margin: 1rem 0 0.4rem; font-size: 0.76rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--gold-hover); }
+.rec-ing { list-style: none; margin: 0; padding: 0; }
+.rec-ing li { position: relative; padding: 0.32rem 0 0.32rem 1.05rem; font-size: 0.86rem; line-height: 1.45; color: var(--text-main); }
+.rec-ing li::before { content: ''; position: absolute; left: 0.1rem; top: 0.85em; width: 5px; height: 5px;
+    border-radius: 50%; background: var(--sage); }
+.rec-steps { list-style: none; counter-reset: rstep; margin: 0; padding: 0; }
+.rec-steps li { counter-increment: rstep; position: relative; padding: 0.5rem 0 0.5rem 2.15rem;
+    font-size: 0.86rem; line-height: 1.5; color: var(--text-main); }
+.rec-steps li + li { border-top: 1px dashed var(--border-color); }
+.rec-steps li::before { content: counter(rstep); position: absolute; left: 0; top: 0.6rem;
+    width: 1.55rem; height: 1.55rem; display: grid; place-items: center; border-radius: 50%;
+    background: var(--sage-soft); color: var(--sage-deep); font-size: 0.76rem; font-weight: 800; }
+.rec-note { margin: 0.9rem 0 0; padding: 0.55rem 0.7rem; border-radius: 10px; background: var(--sage-soft);
+    font-size: 0.74rem; line-height: 1.45; color: var(--sage-deep); }
+
+/* ── Шторка «Собери замену» — пошаговый визард замены блюда ── */
+.sheet--wiz h2 { font-size: 1.35rem; line-height: 1.25; padding-right: 2.2rem; }
+/* Прогресс шагов — заметный (клиент на тесте не понял, что шагов несколько):
+   сегменты-полоски + «Шаг N из M» жирно + кнопка пропуска шагов 2+ сверху. */
+.wiz-prog:empty { display: none; }
+.wiz-prog { margin: 0.55rem 0 0.15rem; }
+.wiz-prog__segs { display: flex; gap: 0.35rem; margin-bottom: 0.45rem; }
+.wiz-prog__segs i { flex: 1; height: 6px; border-radius: 3px; background: var(--border-color); }
+.wiz-prog__segs i.is-done { background: var(--sage); }
+.wiz-prog__segs i.is-on { background: var(--gold); }
+.wiz-prog__row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; min-height: 48px; }
+.wiz-prog__row b { font-size: 0.95rem; font-weight: 800; color: var(--text-main); }
+.wiz-skip { min-height: 48px; padding: 0.4rem 0.9rem; border: 1.5px solid var(--champagne); border-radius: 999px;
+    background: var(--gold-soft); font: inherit; font-size: 0.8rem; font-weight: 700; color: var(--gold-hover);
+    cursor: pointer; transition: var(--transition); }
+.wiz-skip:active { border-color: var(--gold); }
+/* Живой счётчик: «выбрано ≈ N ккал · блюдо было M» + вровень/легче/плотнее */
+.wiz-sum { display: flex; flex-direction: column; gap: 0.15rem; margin: 0.4rem 0 0.9rem;
+    padding: 0.6rem 0.75rem; border-radius: 12px; background: var(--sage-soft); }
+.wiz-sum b { font-size: 0.85rem; color: var(--sage-deep); }
+.wiz-sum span { font-size: 0.75rem; color: var(--sage-medium); }
+.wiz-step { margin-bottom: 0.55rem; font-size: 0.76rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--gold-hover); }
+.wiz-cards { display: grid; gap: 0.5rem; }
+/* Тап-карточка продукта: имя, вес «сырой/сухой · ≈ готового», ккал + Б/Ж/У */
+.wiz-card { display: flex; flex-direction: column; align-items: flex-start; gap: 0.18rem; width: 100%;
+    min-height: 56px; padding: 0.65rem 0.85rem; text-align: left; border: 1.5px solid var(--border-color);
+    border-radius: 13px; background: var(--bg-pure); font-family: inherit; cursor: pointer; transition: var(--transition); }
+.wiz-card:active { border-color: var(--gold); background: var(--gold-soft); }
+@media (hover: hover) { .wiz-card:hover { border-color: var(--gold); } }
+/* Текущая замена на экране готовых вариантов — повторный тап вернёт блюдо плана */
+.wiz-card.is-on { border-color: var(--gold); background: var(--gold-soft); }
+.wiz-card__n { font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
+.wiz-card__w { font-size: 0.74rem; color: var(--text-muted); }
+.wiz-card__meta { display: flex; align-items: baseline; gap: 0.55rem; font-size: 0.76rem; }
+.wiz-card__meta b { font-weight: 700; color: var(--gold-hover); font-variant-numeric: tabular-nums; }
+.wiz-card__meta i { font-style: normal; font-weight: 600; color: var(--sage-medium); font-variant-numeric: tabular-nums; }
+.wiz-foot { display: flex; align-items: center; gap: 0.7rem; margin-top: 0.9rem; }
+.wiz-back { flex: none; min-height: 48px; padding: 0.5rem 0.4rem; border: 0; background: none;
+    font: inherit; font-size: 0.84rem; font-weight: 700; color: var(--sage-medium); cursor: pointer; }
+.wiz-done { flex: 1; min-height: 48px; }
+
+/* Выбор настроения */
+.mood-opts { display: grid; gap: 0.7rem; margin-top: 1.2rem; }
+.mood-opt {
+    display: flex; align-items: center; gap: 0.9rem; width: 100%; text-align: left;
+    padding: 1rem; min-height: 64px; border: 1.5px solid var(--border-color); border-radius: 15px;
+    background: var(--bg-pure); font-weight: 600; font-size: 1rem; color: var(--text-main); cursor: pointer; transition: var(--transition);
+}
+.mood-opt .emo { font-size: 1.6rem; }
+.mood-opt.sel { border-color: var(--gold); background: var(--gold-soft); box-shadow: 0 0 0 3px var(--gold-soft); }
+@media (hover: hover) { .mood-opt:hover { border-color: var(--gold); } }
+
+/* Загрузка фото */
+.photo-drop {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;
+    min-height: 180px; margin-top: 1.1rem; border: 2px dashed var(--border-focus); border-radius: 16px;
+    background: var(--bg-milk); cursor: pointer; text-align: center; padding: 1.2rem; color: var(--text-muted); overflow: hidden;
+}
+.photo-drop .ph-ic { font-size: 2.2rem; }
+.photo-drop .ph-hint { font-size: 0.85rem; }
+.photo-drop .ph-note { font-size: 0.72rem; line-height: 1.35; max-width: 22rem; opacity: 0.75; }
+.photo-drop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.photo-drop.has-photo .ph-ic, .photo-drop.has-photo .ph-hint, .photo-drop.has-photo .ph-note { display: none; }
+.photo-drop .ph-change { position: absolute; bottom: 8px; right: 8px; background: rgba(26,31,28,0.78); color: #fff; font-size: 0.74rem; font-weight: 600; padding: 0.35rem 0.7rem; border-radius: 999px; display: none; }
+.photo-drop.has-photo .ph-change { display: block; }
+.sheet-actions { margin-top: 1.3rem; display: grid; gap: 0.6rem; }
+.sheet-skip { text-align: center; font-size: 0.85rem; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 0.5rem;
+    text-decoration: underline; text-underline-offset: 3px; /* видно, что кликабельно */ }
+
+/* Поздравление */
+.sheet-done { text-align: center; padding: 1rem 0 0.5rem; }
+.sheet-done .emo { font-size: 3rem; animation: pop 0.5s var(--ease-spring); }
+@keyframes pop { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.sheet-done h2 { margin: 0.6rem 0 0.4rem; }
+.sheet-done p { color: var(--text-muted); margin-bottom: 1.4rem; }
+
+/* Подвал дашборда — «Сообщить о проблеме» (автосбор багов) */
+.dash-foot { margin: 2.4rem 0 1rem; text-align: center; }
+/* Подсказка «Добавь кабинет на экран телефона» (PWA), «✕» гасит навсегда */
+.pwa-hint {
+    display: flex; align-items: flex-start; gap: 0.75rem; text-align: left;
+    background: var(--bg-pure); border: 1px solid var(--border-color); border-radius: 16px;
+    padding: 1rem 0.6rem 1rem 1.1rem; margin-bottom: 1.2rem; box-shadow: var(--shadow-soft);
+}
+.pwa-hint__ic { flex: none; width: 30px; height: 30px; margin-top: 0.1rem; color: var(--sage); }
+.pwa-hint__ic svg { width: 100%; height: 100%; display: block; }
+.pwa-hint__body { flex: 1 1 auto; min-width: 0; font-size: 0.85rem; }
+.pwa-hint__body p { margin: 0.25rem 0 0; font-size: 0.78rem; line-height: 1.5; color: var(--text-muted); }
+.pwa-hint__body svg { color: var(--sage-medium); }
+.pwa-hint__x { flex: none; width: 44px; height: 44px; margin: -0.35rem 0 0; border: 0; background: none;
+    font-size: 1rem; color: var(--text-muted); cursor: pointer; border-radius: 10px; }
+.pwa-hint__x:active { background: var(--bg-milk); }
+.report-link {
+    display: inline-flex; align-items: center; gap: 0.45rem; min-height: 44px; padding: 0.5rem 1rem;
+    font-family: inherit; font-size: 0.85rem; color: var(--text-muted);
+    background: none; border: none; cursor: pointer; transition: var(--transition);
+    /* Подчёркивание = «на это можно нажать»: иначе читается как обычный текст. */
+    text-decoration: underline; text-underline-offset: 3px;
+}
+.report-link svg { color: var(--gold); flex-shrink: 0; }
+.report-link:hover { color: var(--text-main); }
+.report-text {
+    width: 100%; padding: 0.9rem 1rem; font-size: 1rem; font-family: inherit; line-height: 1.5; resize: vertical;
+    border: 1.5px solid var(--border-color); border-radius: 14px; background: var(--bg-milk); transition: var(--transition);
+}
+.report-text:focus { outline: none; border-color: var(--gold); background: var(--bg-pure); box-shadow: 0 0 0 4px var(--gold-soft); }
+
+/* Компактная кнопка «Мои данные и фото» — уезжает в подвал, когда анкета заполнена */
+.measure-chip {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%;
+    min-height: 48px; padding: 0.7rem 1rem; margin-bottom: 0.9rem;
+    font-family: inherit; font-size: 0.9rem; color: var(--text-main); text-align: left;
+    background: var(--bg-pure); border: 1px solid var(--border-color); border-radius: 14px;
+    box-shadow: var(--shadow-card); cursor: pointer; transition: var(--transition);
+}
+.measure-chip__ic { width: 24px; height: 24px; flex-shrink: 0; color: var(--sage); }
+.measure-chip__ic svg { width: 100%; height: 100%; }
+.measure-chip__txt { flex: 1; font-weight: 600; }
+.measure-chip__edit { display: inline-flex; align-items: center; gap: 0.15rem; font-size: 0.82rem; color: var(--gold-hover); white-space: nowrap; }
+.measure-chip__edit svg { width: 15px; height: 15px; }
+.measure-chip:active { transform: scale(0.99); }
+@media (hover: hover) { .measure-chip:hover { border-color: var(--gold); } }
+
+/* Сводка привычек в шторке */
+.habit-summary { display: flex; align-items: center; gap: 0.6rem; margin-top: 1rem; padding: 0.8rem 1rem; background: var(--bg-milk); border-radius: 12px; font-size: 0.88rem; color: var(--text-muted); }
+.habit-summary--nutri { margin-top: 0.45rem; }
+.habit-summary svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--sage); }
+.habit-summary b { color: var(--sage-medium); }
+
+/* Окно «продолжить / заново» */
+.resume-card { text-align: center; }
+.resume-card .emo { font-size: 2.4rem; }
+.resume-card h2 { margin: 0.5rem 0 0.5rem; }
+.resume-card p { color: var(--text-muted); margin-bottom: 1.4rem; }
+.resume-card .btn { margin-bottom: 0.6rem; }
+
+/* ─── Замеры перед стартом (опционально) ─────────────────── */
+.measure-card {
+    background: var(--bg-pure); border: 1.5px solid var(--border-color);
+    border-radius: 20px; padding: 1.3rem; margin-bottom: 1.2rem; box-shadow: var(--shadow-soft);
+}
+.measure-card__head { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.7rem; }
+.measure-card__ic {
+    width: 42px; height: 42px; flex-shrink: 0; border-radius: 12px;
+    background: var(--gold-soft); color: var(--gold-hover); display: grid; place-items: center;
+}
+.measure-card__ic svg { width: 22px; height: 22px; }
+.measure-card h3 { font-family: var(--font-display); font-size: 1.35rem; line-height: 1.1; }
+.measure-card > p { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; }
+.measure-card__actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.measure-card__actions .btn { flex: 1; min-width: 140px; }
+
+/* Карточка-сводка после записи замеров */
+.measure-card--done .measure-card__head { margin-bottom: 0.5rem; }
+.measure-card--done .measure-card__head p { font-size: 0.84rem; color: var(--text-muted); }
+.measure-vals { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.2rem 0 0.9rem; }
+.measure-val {
+    background: var(--bg-milk); border: 1px solid var(--border-color); border-radius: 999px;
+    padding: 0.35rem 0.8rem; font-size: 0.82rem; color: var(--text-muted);
+}
+.measure-val b { color: var(--text-main); font-weight: 700; }
+.measure-edit { background: none; border: none; color: var(--gold-hover); font-weight: 600; font-size: 0.85rem; cursor: pointer; padding: 0.4rem 0; }
+@media (hover: hover) { .measure-edit:hover { color: var(--gold); } }
+
+/* Тонкая ссылка «добавить замеры», если предложение отложено */
+.measure-mini { text-align: center; margin-bottom: 1.2rem; }
+.measure-mini button { background: none; border: none; color: var(--gold-hover); font-family: var(--font-ui); font-weight: 600; font-size: 0.88rem; cursor: pointer; padding: 0.5rem 0.8rem; min-height: 44px; }
+@media (hover: hover) { .measure-mini button:hover { color: var(--gold); } }
+
+/* Большая «убедительная» карточка-приглашение к замерам */
+.measure-hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(155deg, #fffdf7, var(--bg-pure) 55%);
+    border: 1.5px solid var(--border-focus); border-radius: 22px;
+    padding: 1.5rem 1.35rem; margin-bottom: 1.4rem; box-shadow: var(--shadow-card);
+}
+.measure-hero::before {
+    content: ''; position: absolute; right: -50px; top: -50px; width: 170px; height: 170px;
+    background: radial-gradient(circle, var(--gold-glow), transparent 70%); pointer-events: none;
+}
+.measure-hero > * { position: relative; }
+.measure-hero__badge {
+    display: inline-block; font-family: var(--font-ui); font-size: 0.66rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-hover);
+    background: var(--gold-soft); padding: 0.32rem 0.7rem; border-radius: 999px; margin-bottom: 0.9rem;
+}
+.measure-hero__top { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
+.measure-hero__ic {
+    width: 46px; height: 46px; flex-shrink: 0; border-radius: 14px;
+    background: var(--gold-soft); color: var(--gold-hover); display: grid; place-items: center;
+}
+.measure-hero__ic svg { width: 24px; height: 24px; }
+.measure-hero h3 { font-family: var(--font-display); font-size: 1.5rem; line-height: 1.1; }
+.measure-hero__lead { font-size: 0.92rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 1rem; }
+.measure-hero__list { list-style: none; margin: 0 0 1.3rem; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+.measure-hero__list li { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.9rem; line-height: 1.4; }
+.measure-hero__list svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--sage); margin-top: 1px; }
+.measure-hero .btn { margin-bottom: 0.3rem; }
+.measure-hero__later {
+    display: block; width: 100%; background: none; border: none; color: var(--text-muted);
+    font-family: var(--font-ui); font-size: 0.85rem; cursor: pointer; padding: 0.55rem; min-height: 44px;
+    text-decoration: underline; text-underline-offset: 3px; /* видно, что кликабельно */
+}
+@media (hover: hover) { .measure-hero__later:hover { color: var(--gold-hover); } }
+
+/* Сравнение «до и после» — экран результата */
+.measure-compare {
+    background: linear-gradient(155deg, var(--champagne), var(--bg-pure) 60%);
+    border: 1.5px solid var(--border-focus); border-radius: 22px;
+    padding: 1.45rem 1.35rem; margin-bottom: 1.4rem; box-shadow: var(--shadow-card);
+}
+.measure-compare__head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; }
+.measure-compare__emo { font-size: 1.9rem; line-height: 1; }
+.measure-compare__head h3 { font-family: var(--font-display); font-size: 1.4rem; line-height: 1.1; }
+.measure-compare__head p { font-size: 0.84rem; color: var(--text-muted); margin-top: 0.1rem; }
+.mc-headline { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.mc-big {
+    flex: 1; min-width: 128px; background: var(--bg-pure); border: 1px solid var(--border-color);
+    border-radius: 15px; padding: 0.8rem 0.95rem;
+}
+.mc-big span { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.25rem; }
+.mc-big b { font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; color: var(--sage-medium); line-height: 1; }
+.mc-rows { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.9rem; }
+.mc-row {
+    display: flex; align-items: center; gap: 0.6rem;
+    background: var(--bg-pure); border: 1px solid var(--border-color); border-radius: 14px; padding: 0.7rem 0.9rem;
+}
+.mc-row__label { font-weight: 600; font-size: 0.9rem; min-width: 58px; }
+.mc-row__nums { flex: 1; display: flex; align-items: center; gap: 0.35rem; font-size: 0.9rem; color: var(--text-muted); }
+.mc-row__nums b { color: var(--text-main); font-weight: 700; }
+.mc-row__nums svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--gold-hover); }
+.mc-delta { font-family: var(--font-ui); font-weight: 700; font-size: 0.8rem; padding: 0.28rem 0.6rem; border-radius: 999px; white-space: nowrap; }
+.mc-delta--is-down { color: var(--sage-medium); background: var(--sage-soft); }
+.mc-delta--is-up { color: var(--gold-hover); background: var(--gold-soft); }
+.mc-delta--is-same { color: var(--text-muted); background: var(--bg-milk); }
+
+/* Обязательное поле анкеты */
+.measure-field .req { color: var(--gold-hover); font-weight: 700; }
+/* Фото обязательно (стартовая анкета) — золотая рамка-акцент вместо нейтральной */
+.photo-drop--req { border-color: var(--gold); }
+.photo-drop--req .ph-hint b { color: var(--gold-hover); }
+
+/* Фото прогресса: мини-превью в сводке + коллаж «до/после» */
+.measure-thumb { display: block; width: 100%; max-height: 200px; object-fit: cover; border-radius: 14px; margin: 0.2rem 0 0.9rem; }
+.mc-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 1rem; }
+.mc-photo { position: relative; margin: 0; border-radius: 14px; overflow: hidden; background: var(--bg-milk); aspect-ratio: 3 / 4; }
+.mc-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mc-photo__empty { position: absolute; inset: 0; display: grid; place-items: center; font-size: 0.8rem; color: var(--text-muted); padding: 0.5rem; text-align: center; }
+.mc-photo figcaption { position: absolute; left: 8px; bottom: 8px; background: rgba(26,31,28,0.78); color: #fff; font-size: 0.74rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 999px; }
+
+/* Форма замеров в шторке */
+.measure-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; margin-top: 1.1rem; }
+.measure-field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.3rem; }
+.measure-field .inp-wrap { position: relative; }
+.measure-field input {
+    width: 100%; padding: 0.8rem 2.7rem 0.8rem 0.9rem; min-height: 52px; font-size: 1rem; font-family: inherit;
+    border: 1.5px solid var(--border-color); border-radius: 13px; background: var(--bg-milk); transition: var(--transition);
+}
+.measure-field input:focus { outline: none; border-color: var(--gold); background: var(--bg-pure); box-shadow: 0 0 0 4px var(--gold-soft); }
+.measure-field .unit { position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%); font-size: 0.82rem; color: var(--text-muted); pointer-events: none; }
+
+/* Недельное взвешивание: объёмы — свёрнутая «по желанию» (вес главный) */
+.measure-opt { grid-column: 1 / -1; }
+.measure-opt summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; min-height: 48px;
+    padding: 0.5rem 0.95rem; border: 1px dashed var(--border-focus); border-radius: 999px;
+    background: var(--bg-pure); font-size: 0.82rem; font-weight: 600; color: var(--sage-medium); }
+.measure-opt summary::-webkit-details-marker { display: none; }
+.measure-opt[open] summary { color: var(--text-main); border-style: solid; }
+.measure-opt__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; margin-top: 0.7rem; }
+
+/* Выбор уровня активности в анкете (для бюджета калорий) */
+.activity-pick { margin-top: 1.1rem; }
+.activity-pick__title { display: block; font-size: 0.92rem; font-weight: 700; color: var(--text-main); }
+.activity-pick__title .req { color: var(--gold-hover); }
+.activity-pick__sub { display: block; font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; margin: 0.2rem 0 0.7rem; }
+.activity-opt {
+    display: flex; align-items: flex-start; gap: 0.7rem; padding: 0.85rem 0.9rem; margin-bottom: 0.6rem;
+    border: 1.5px solid var(--border-color); border-radius: 14px; background: var(--bg-milk);
+    cursor: pointer; transition: var(--transition); min-height: 52px;
+}
+.activity-opt:last-child { margin-bottom: 0; }
+.activity-opt input { appearance: none; -webkit-appearance: none; margin: 0.15rem 0 0; flex: none;
+    width: 22px; height: 22px; border: 2px solid var(--border-color); border-radius: 50%; background: var(--bg-pure);
+    transition: var(--transition); }
+.activity-opt input:checked { border-color: var(--gold); box-shadow: inset 0 0 0 5px var(--gold); }
+.activity-opt.is-on { border-color: var(--gold); background: var(--bg-pure); box-shadow: 0 0 0 4px var(--gold-soft); }
+.activity-opt__main { display: block; }
+.activity-opt__main b { display: block; font-size: 0.95rem; color: var(--text-main); }
+.activity-opt__main em { display: block; font-style: normal; font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; margin-top: 0.15rem; }
+
+/* Чекбокс согласия на обработку данных (стартовая анкета) */
+.consent-check {
+    display: flex; align-items: flex-start; gap: 0.65rem; margin-top: 1rem; padding: 0.85rem 0.9rem;
+    border: 1.5px solid var(--border-color); border-radius: 14px; background: var(--bg-milk); cursor: pointer;
+}
+.consent-check input {
+    appearance: none; -webkit-appearance: none; margin: 0.05rem 0 0; flex: none;
+    width: 21px; height: 21px; border: 2px solid var(--border-color); border-radius: 6px;
+    background: var(--bg-pure); transition: var(--transition); position: relative;
+}
+.consent-check input:checked { border-color: var(--gold); background: var(--gold); }
+.consent-check input:checked::after {
+    content: ''; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px;
+    border: solid var(--bg-pure); border-width: 0 2px 2px 0; transform: rotate(40deg);
+}
+.consent-check span { font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; }
+.consent-check a { color: var(--sage-medium); text-decoration: underline; text-underline-offset: 2px; }
+@media (hover: hover) { .consent-check a:hover { color: var(--gold-hover); } }
+
+/* ─── Юридические страницы (privacy.html / oferta.html) ─────────────── */
+.legal-page { max-width: 720px; margin: 0 auto; padding: 2.2rem 0 3.5rem; }
+.legal-page__back {
+    display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600;
+    color: var(--text-muted); margin-bottom: 1.4rem;
+}
+.legal-page__back svg { width: 16px; height: 16px; }
+@media (hover: hover) { .legal-page__back:hover { color: var(--gold-hover); } }
+.legal-page h1 { font-size: 1.9rem; margin-bottom: 0.3rem; }
+.legal-meta {
+    font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; background: var(--bg-pure);
+    border-radius: 14px; padding: 1rem 1.1rem; margin: 1.2rem 0 1.8rem; box-shadow: var(--shadow-soft);
+}
+.legal-meta strong { color: var(--text-main); }
+.legal-page h2 { font-size: 1.25rem; margin: 1.8rem 0 0.7rem; }
+.legal-page h3 { font-size: 1.05rem; margin: 1.1rem 0 0.5rem; }
+.legal-page p, .legal-page li { font-size: 0.92rem; color: var(--text-main); line-height: 1.65; }
+.legal-page p { margin-bottom: 0.7rem; }
+.legal-page ul { margin: 0 0 0.9rem 1.2rem; }
+.legal-page li { margin-bottom: 0.35rem; }
+.legal-page a { color: var(--sage-medium); text-decoration: underline; text-underline-offset: 2px; }
+@media (hover: hover) { .legal-page a:hover { color: var(--gold-hover); } }
+
+/* Бюджет дня (day.html): ссылка «изменить активность» */
+.nutri-norm__edit { color: var(--gold-hover); text-decoration: underline; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

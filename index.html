@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Безопасность: при переезде на GitHub Pages пропали HTTP-заголовки CF (свои там нельзя) -> максимум возвращаем мета-тегами + фрейм-бастером. Детали: docs/МИГРАЦИЯ-ХОСТИНГА.md §13.1 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://sxktnpupxcslzjrhisyw.supabase.co; connect-src 'self' https://sxktnpupxcslzjrhisyw.supabase.co wss://sxktnpupxcslzjrhisyw.supabase.co https://*.ingest.de.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <script src="js/frame-buster.js?v=0.6.73"></script>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#1a1f1c">
+    <link rel="icon" href="favicon.svg?v=0.6.73" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=0.6.73">
+    <link rel="manifest" href="manifest.webmanifest?v=0.6.73">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KatyaFit">
+    <title>Вход · Личный кабинет KatyaFit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/tokens.css?v=0.6.73">
+    <link rel="stylesheet" href="css/cabinet.css?v=0.6.73">
+</head>
+<body>
+    <main class="auth-wrap">
+        <div class="auth-card">
+            <div class="brand">
+                <span class="brand__logo">Katya<b>Fit</b></span>
+            </div>
+            <div class="brand__sub">Личный кабинет</div>
+
+            <h1 class="auth-title">Добро пожаловать</h1>
+            <p class="auth-sub" data-auth-lead>Введи свою электронную почту — пришлём на неё код для входа. Твоя программа домашнего похудения уже ждёт.</p>
+
+            <!-- Шаг 1: email + имя -->
+            <form id="loginForm" novalidate>
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="например: anna@mail.ru" autocomplete="email" required>
+                </div>
+                <div class="field">
+                    <label for="name">Как тебя зовут</label>
+                    <input type="text" id="name" placeholder="Например, Анна" autocomplete="given-name">
+                </div>
+                <button type="submit" class="btn btn--gold btn--block">Получить код для входа</button>
+            </form>
+
+            <!-- Шаг 2: ввод 6-значного кода из письма -->
+            <form id="codeForm" novalidate hidden>
+                <div class="field">
+                    <label for="code">Код из письма</label>
+                    <input type="text" id="code" class="code-input" inputmode="numeric" autocomplete="one-time-code"
+                           pattern="[0-9]*" maxlength="8" placeholder="••••••">
+                </div>
+                <button type="submit" class="btn btn--gold btn--block">Войти</button>
+                <div class="auth-actions">
+                    <button type="button" class="auth-link" data-resend>Отправить код заново</button>
+                    <button type="button" class="auth-link" data-change-email>Изменить email</button>
+                </div>
+            </form>
+
+            <p class="auth-msg" data-auth-msg hidden></p>
+
+            <p class="auth-note">
+                Пароль не нужен: мы пришлём письмо с кодом, его нужно ввести здесь.
+                Если письма нет пару минут — проверь папку «Спам».
+            </p>
+            <p class="auth-note">
+                Продолжая, вы соглашаетесь с <a href="privacy.html">Политикой конфиденциальности</a>
+                и <a href="oferta.html">офертой</a>.
+            </p>
+        </div>
+    </main>
+
+    <script src="js/vendor/supabase.js?v=0.6.73"></script>
+    <script src="js/vendor/sentry.js?v=0.6.73"></script>
+    <script src="js/sentry-init.js?v=0.6.73"></script>
+    <script src="js/supabase.js?v=0.6.73"></script>
+    <script src="js/error-report.js?v=0.6.73"></script>
+    <script src="js/program-data.js?v=0.6.73"></script>
+    <script src="js/app.js?v=0.6.73"></script>
+    <script>
+        (async () => {
+            // supabase-js не поднялся (обрыв сети/битый кэш — sb === null): без этого
+            // гарда форма выглядит живой, но кнопки молчат. Просим обновить страницу.
+            if (typeof sb === 'undefined' || !sb) {
+                const m = document.querySelector('[data-auth-msg]');
+                if (m) { m.hidden = false; m.classList.add('is-error'); m.textContent = 'Не загрузилась часть кабинета. Проверь интернет и обнови страницу.'; }
+                return;
+            }
+            // Уже есть сессия — сразу в кабинет
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) { window.location.replace('dashboard.html'); return; }
+
+            const loginForm = document.getElementById('loginForm');
+            const codeForm  = document.getElementById('codeForm');
+            const emailInput = document.getElementById('email');
+            const nameInput  = document.getElementById('name');
+            const codeInput  = document.getElementById('code');
+            const loginBtn = loginForm.querySelector('button[type=submit]');
+            const codeBtn  = codeForm.querySelector('button[type=submit]');
+            const lead = document.querySelector('[data-auth-lead]');
+            const msg  = document.querySelector('[data-auth-msg]');
+            const resendBtn = document.querySelector('[data-resend]');
+            let currentEmail = '';
+
+            // Экранируем и кавычки — на случай использования в атрибутах разметки.
+            function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+            function showMsg(html, isError) {
+                msg.hidden = false; msg.classList.toggle('is-error', !!isError); msg.innerHTML = html;
+            }
+            function pendingName() { return (localStorage.getItem('kf_pending_name') || '').trim(); }
+
+            // Запрос кода. shouldCreateUser:true — заводит участницу при первом входе.
+            // emailRedirectTo НЕ передаём: вход по коду, ссылка в письме не нужна (и не должна
+            // быть — иначе антивирус почты «прокликает» её и сожжёт одноразовый токен).
+            async function sendCode(email) {
+                const name = pendingName();
+                const { error } = await sb.auth.signInWithOtp({
+                    email,
+                    options: { shouldCreateUser: true, data: name ? { name } : undefined },
+                });
+                return error;
+            }
+
+            // ── Шаг 1: отправка кода ──
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = emailInput.value.trim();
+                if (!email) { emailInput.focus(); return; }
+                let name = nameInput.value.trim();
+                if (name) { name = name.charAt(0).toUpperCase() + name.slice(1); localStorage.setItem('kf_pending_name', name); }
+                loginBtn.disabled = true; loginBtn.textContent = 'Отправляем код…';
+                msg.hidden = true; msg.classList.remove('is-error');
+
+                const error = await sendCode(email);
+                loginBtn.disabled = false; loginBtn.textContent = 'Получить код для входа';
+                if (error) {
+                    showMsg(/rate limit|after|too many/i.test(error.message)
+                        ? 'Слишком много запросов подряд. Подожди около минуты и попробуй снова.'
+                        : 'Не получилось отправить письмо: ' + escapeHtml(error.message), true);
+                    return;
+                }
+
+                currentEmail = email;
+                loginForm.hidden = true;
+                codeForm.hidden = false;
+                lead.innerHTML = 'Мы отправили письмо с кодом из 6 цифр на <b>' + escapeHtml(email) + '</b>.<br>Открой письмо и введи код сюда. Нет письма — проверь папку «Спам».';
+                msg.hidden = true;
+                codeInput.value = '';
+                codeInput.focus();
+            });
+
+            // ── Шаг 2: проверка кода ──
+            codeForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const token = codeInput.value.replace(/\D/g, '');
+                if (token.length < 6) { codeInput.focus(); return; }
+                codeBtn.disabled = true; codeBtn.textContent = 'Проверяем…';
+                msg.hidden = true; msg.classList.remove('is-error');
+
+                // type:'email' — обычный OTP-вход. Совсем новый адрес мог получить
+                // письмо «подтверждение регистрации» (type:'signup') — поэтому при
+                // ошибке валидности кода пробуем второй тип, прежде чем ругаться.
+                let { error } = await sb.auth.verifyOtp({ email: currentEmail, token, type: 'email' });
+                if (error && /expired|invalid|token|otp/i.test(error.message || '')) {
+                    const retry = await sb.auth.verifyOtp({ email: currentEmail, token, type: 'signup' });
+                    error = retry.error;
+                }
+                if (error) {
+                    codeBtn.disabled = false; codeBtn.textContent = 'Войти';
+                    showMsg(/expired|invalid|token|otp/i.test(error.message || '')
+                        ? 'Код неверный или устарел. Проверь цифры или запроси новый код.'
+                        : 'Не получилось войти: ' + escapeHtml(error.message), true);
+                    return;
+                }
+                window.location.replace('dashboard.html');
+            });
+
+            // Отправить код заново (антиспам-пауза 30 с на кнопке)
+            resendBtn.addEventListener('click', async () => {
+                resendBtn.disabled = true;
+                const error = await sendCode(currentEmail);
+                showMsg(error ? ('Не удалось отправить: ' + escapeHtml(error.message))
+                              : 'Новый код отправлен на <b>' + escapeHtml(currentEmail) + '</b>.', !!error);
+                setTimeout(() => { resendBtn.disabled = false; }, 30000);
+            });
+
+            // Вернуться к вводу email
+            document.querySelector('[data-change-email]').addEventListener('click', () => {
+                codeForm.hidden = true; loginForm.hidden = false; msg.hidden = true;
+                lead.textContent = 'Введи свою электронную почту — пришлём на неё код для входа. Твоя программа домашнего похудения уже ждёт.';
+                emailInput.focus();
+            });
+        })();
+    </script>
+</body>
+</html>
